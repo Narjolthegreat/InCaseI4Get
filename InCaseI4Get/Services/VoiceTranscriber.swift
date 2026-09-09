@@ -39,9 +39,6 @@ final class VoiceTranscriber: NSObject, ObservableObject {
                 return
             }
 
-            if recognizer.supportsOnDeviceRecognition {
-                recognizer.requiresOnDeviceRecognition = true
-            }
             beginRecording(with: recognizer)
         }
     }
@@ -54,6 +51,9 @@ final class VoiceTranscriber: NSObject, ObservableObject {
     private func beginRecording(with recognizer: SFSpeechRecognizer) {
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true
+        if recognizer.supportsOnDeviceRecognition {
+            request.requiresOnDeviceRecognition = true
+        }
         recognitionRequest = request
 
         let audioSession = AVAudioSession.sharedInstance()
@@ -81,10 +81,10 @@ final class VoiceTranscriber: NSObject, ObservableObject {
             DispatchQueue.main.async {
                 guard let self else { return }
                 if let result {
-                    transcript = result.bestTranscription.formattedString
+                    self.transcript = result.bestTranscription.formattedString
                 }
                 if error != nil || result?.isFinal == true {
-                    finish()
+                    self.finish()
                 }
             }
         }

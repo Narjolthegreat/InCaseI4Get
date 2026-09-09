@@ -220,7 +220,7 @@ enum NotificationScheduler {
             return DateComponents(hour: hour, minute: minute, weekday: weekday)
         case .monthly:
             let day = calendar.component(.day, from: referenceDate)
-            return DateComponents(hour: hour, minute: minute, day: day)
+            return DateComponents(day: day, hour: hour, minute: minute)
         }
     }
 

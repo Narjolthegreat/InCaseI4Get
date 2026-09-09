@@ -1,0 +1,409 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C10001C10001C10001C10001 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20001C20001C20001C20001 /* AppDelegate.swift */; };
+		C10002C10002C10002C10002 /* InCaseI4GetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20002C20002C20002C20002 /* InCaseI4GetApp.swift */; };
+		C10003C10003C10003C10003 /* ReminderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20003C20003C20003C20003 /* ReminderItem.swift */; };
+		C10004C10004C10004C10004 /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20004C20004C20004C20004 /* NotificationScheduler.swift */; };
+		C10005C10005C10005C10005 /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20005C20005C20005C20005 /* SpeechService.swift */; };
+		C10006C10006C10006C10006 /* VoiceTranscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20006C20006C20006C20006 /* VoiceTranscriber.swift */; };
+		C10007C10007C10007C10007 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20007C20007C20007C20007 /* HomeView.swift */; };
+		C10008C10008C10008C10008 /* AddReminderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20008C20008C20008C20008 /* AddReminderView.swift */; };
+		C10009C10009C10009C10009 /* ReminderRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20009C20009C20009C20009 /* ReminderRowView.swift */; };
+		C10010C10010C10010C10010 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20010C20010C20010C20010 /* SettingsView.swift */; };
+		C10011C10011C10011C10011 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20011C20011C20011C20011 /* AppSettings.swift */; };
+		C10012C10012C10012C10012 /* PendingActionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20012C20012C20012C20012 /* PendingActionStore.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		C20001C20001C20001C20001 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		C20002C20002C20002C20002 /* InCaseI4GetApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InCaseI4GetApp.swift; sourceTree = "<group>"; };
+		C20003C20003C20003C20003 /* ReminderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderItem.swift; sourceTree = "<group>"; };
+		C20004C20004C20004C20004 /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
+		C20005C20005C20005C20005 /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
+		C20006C20006C20006C20006 /* VoiceTranscriber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceTranscriber.swift; sourceTree = "<group>"; };
+		C20007C20007C20007C20007 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		C20008C20008C20008C20008 /* AddReminderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReminderView.swift; sourceTree = "<group>"; };
+		C20009C20009C20009C20009 /* ReminderRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderRowView.swift; sourceTree = "<group>"; };
+		C20010C20010C20010C20010 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		C20011C20011C20011C20011 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		C20012C20012C20012C20012 /* PendingActionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingActionStore.swift; sourceTree = "<group>"; };
+		C20013C20013C20013C20013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C80001C80001C80001C80001 /* InCaseI4Get.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InCaseI4Get.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C40002C40002C40002C40002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C30001C30001C30001C30001 = {
+			isa = PBXGroup;
+			children = (
+				C30002C30002C30002C30002 /* InCaseI4Get */,
+				C30009C30009C30009C30009 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C30002C30002C30002C30002 /* InCaseI4Get */ = {
+			isa = PBXGroup;
+			children = (
+				C30003C30003C30003C30003 /* App */,
+				C30004C30004C30004C30004 /* Models */,
+				C30005C30005C30005C30005 /* Services */,
+				C30006C30006C30006C30006 /* Support */,
+				C30007C30007C30007C30007 /* Views */,
+				C30008C30008C30008C30008 /* Resources */,
+			);
+			path = InCaseI4Get;
+			sourceTree = "<group>";
+		};
+		C30003C30003C30003C30003 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				C20001C20001C20001C20001 /* AppDelegate.swift */,
+				C20002C20002C20002C20002 /* InCaseI4GetApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		C30004C30004C30004C30004 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				C20003C20003C20003C20003 /* ReminderItem.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		C30005C30005C30005C30005 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				C20004C20004C20004C20004 /* NotificationScheduler.swift */,
+				C20005C20005C20005C20005 /* SpeechService.swift */,
+				C20006C20006C20006C20006 /* VoiceTranscriber.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		C30006C30006C30006C30006 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				C20011C20011C20011C20011 /* AppSettings.swift */,
+				C20012C20012C20012C20012 /* PendingActionStore.swift */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		C30007C30007C30007C30007 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				C20010C20010C20010C20010 /* SettingsView.swift */,
+				C20007C20007C20007C20007 /* HomeView.swift */,
+				C20008C20008C20008C20008 /* AddReminderView.swift */,
+				C20009C20009C20009C20009 /* ReminderRowView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		C30008C30008C30008C30008 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				C20013C20013C20013C20013 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		C30009C30009C30009C30009 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C80001C80001C80001C80001 /* InCaseI4Get.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C50001C50001C50001C50001 /* InCaseI4Get */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C60002C60002C60002C60002 /* Build configuration list for PBXNativeTarget "InCaseI4Get" */;
+			buildPhases = (
+				C40003C40003C40003C40003 /* Sources */,
+				C40002C40002C40002C40002 /* Frameworks */,
+				C40004C40004C40004C40004 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = InCaseI4Get;
+			productName = InCaseI4Get;
+			productReference = C80001C80001C80001C80001 /* InCaseI4Get.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C50002C50002C50002C50002 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					C50001C50001C50001C50001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = C60001C60001C60001C60001 /* Build configuration list for PBXProject "InCaseI4Get" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				zh-Hans,
+			);
+			mainGroup = C30001C30001C30001C30001;
+			productRefGroup = C30009C30009C30009C30009 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C50001C50001C50001C50001 /* InCaseI4Get */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C40004C40004C40004C40004 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C40003C40003C40003C40003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C10001C10001C10001C10001 /* AppDelegate.swift in Sources */,
+				C10002C10002C10002C10002 /* InCaseI4GetApp.swift in Sources */,
+				C10003C10003C10003C10003 /* ReminderItem.swift in Sources */,
+				C10004C10004C10004C10004 /* NotificationScheduler.swift in Sources */,
+				C10005C10005C10005C10005 /* SpeechService.swift in Sources */,
+				C10006C10006C10006C10006 /* VoiceTranscriber.swift in Sources */,
+				C10007C10007C10007C10007 /* HomeView.swift in Sources */,
+				C10008C10008C10008C10008 /* AddReminderView.swift in Sources */,
+				C10009C10009C10009C10009 /* ReminderRowView.swift in Sources */,
+				C10010C10010C10010C10010 /* SettingsView.swift in Sources */,
+				C10011C10011C10011C10011 /* AppSettings.swift in Sources */,
+				C10012C10012C10012C10012 /* PendingActionStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		C70001C70001C70001C70001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		C70002C70002C70002C70002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		C70003C70003C70003C70003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = InCaseI4Get/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.incasei4get.InCaseI4Get;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C70004C70004C70004C70004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = InCaseI4Get/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.incasei4get.InCaseI4Get;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C60001C60001C60001C60001 /* Build configuration list for PBXProject "InCaseI4Get" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C70001C70001C70001C70001 /* Debug */,
+				C70002C70002C70002C70002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C60002C60002C60002C60002 /* Build configuration list for PBXNativeTarget "InCaseI4Get" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C70003C70003C70003C70003 /* Debug */,
+				C70004C70004C70004C70004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C50002C50002C50002C50002 /* Project object */;
+}

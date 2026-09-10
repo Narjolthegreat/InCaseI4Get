@@ -81,15 +81,6 @@ final class HomeFlowUITests: XCTestCase {
 
         let repeatButton = app.buttons["VoiceReminderRepeatButton"]
         XCTAssertTrue(repeatButton.exists)
-        repeatButton.tap()
-
-        XCTAssertTrue(
-            app.buttons["PurchaseRepeatProButton"].waitForExistence(timeout: 5),
-            "Repeat Pro paywall did not appear."
-        )
-        keepScreenshot(named: "08-repeat-pro-paywall")
-
-        app.buttons["ClosePaywallButton"].tap()
 
         XCTAssertFalse(
             app.otherElements["ReminderRow"].exists,

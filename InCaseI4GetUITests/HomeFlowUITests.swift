@@ -59,7 +59,7 @@ final class HomeFlowUITests: XCTestCase {
         speakButton.press(forDuration: 0.8)
 
         XCTAssertTrue(
-            app.otherElements["VoiceReminderConfirmation"].waitForExistence(timeout: 5),
+            app.navigationBars["Confirm Reminder"].waitForExistence(timeout: 5),
             "Voice reminder confirmation did not appear."
         )
 

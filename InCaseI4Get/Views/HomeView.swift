@@ -97,7 +97,8 @@ struct HomeView: View {
                 if let voicePhase {
                     VoiceCaptureOverlay(
                         phase: voicePhase,
-                        transcript: voiceRecorder.transcript
+                        transcript: voiceRecorder.transcript,
+                        audioLevel: voiceRecorder.audioLevel
                     )
                     .transition(.opacity)
                 }
@@ -723,6 +724,7 @@ private struct RepeatReminderProPaywallView: View {
 private struct VoiceCaptureOverlay: View {
     let phase: VoiceCapturePhase
     let transcript: String
+    let audioLevel: Double
 
     private var isListening: Bool {
         switch phase {
@@ -739,7 +741,10 @@ private struct VoiceCaptureOverlay: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 18) {
-                VoiceWaveformView(isActive: isListening)
+                VoiceWaveformView(
+                    level: audioLevel,
+                    isActive: isListening
+                )
 
                 Text(title)
                     .font(.headline)
@@ -789,22 +794,25 @@ private struct VoiceCaptureOverlay: View {
 }
 
 private struct VoiceWaveformView: View {
+    let level: Double
     let isActive: Bool
 
     var body: some View {
-        TimelineView(.animation) { context in
-            let time = context.date.timeIntervalSinceReferenceDate
-            HStack(alignment: .center, spacing: 4) {
-                ForEach(0..<24, id: \.self) { index in
-                    let wave = (sin(time * 6 + Double(index) * 0.72) + 1) / 2
-                    let height = isActive ? 10 + wave * 38 : 14
-                    Capsule()
-                        .fill(Color.accentColor)
-                        .frame(width: 4, height: height)
-                }
+        let visibleLevel = isActive ? min(max(level, 0), 1) : 0
+
+        HStack(alignment: .center, spacing: 4) {
+            ForEach(0..<24, id: \.self) { index in
+                let arch = sin(
+                    (Double(index) + 0.5) / 24 * Double.pi
+                )
+                let height = 8 + visibleLevel * (10 + arch * 36)
+                Capsule()
+                    .fill(Color.accentColor)
+                    .frame(width: 4, height: height)
             }
-            .frame(height: 52)
         }
+        .frame(height: 52)
+        .animation(.easeOut(duration: 0.14), value: visibleLevel)
     }
 }
 

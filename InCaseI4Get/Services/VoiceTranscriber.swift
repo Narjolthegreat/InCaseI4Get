@@ -6,6 +6,7 @@ final class VoiceTranscriber: NSObject, ObservableObject {
     @Published private(set) var isRecording = false
     @Published private(set) var transcript = ""
     @Published private(set) var permissionMessage: String?
+    @Published private(set) var audioLevel: Double = 0
 
     private let audioEngine = AVAudioEngine()
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
@@ -32,6 +33,7 @@ final class VoiceTranscriber: NSObject, ObservableObject {
         stopRequested = false
         transcript = ""
         permissionMessage = nil
+        audioLevel = 0
 
         if isUITesting {
             isRecording = true
@@ -91,7 +93,9 @@ final class VoiceTranscriber: NSObject, ObservableObject {
         let inputNode = audioEngine.inputNode
         let recordingFormat = inputNode.outputFormat(forBus: 0)
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
-            self?.recognitionRequest?.append(buffer)
+            guard let self else { return }
+            self.recognitionRequest?.append(buffer)
+            self.publishAudioLevel(Self.normalizedRMS(from: buffer))
         }
 
         audioEngine.prepare()
@@ -126,6 +130,7 @@ final class VoiceTranscriber: NSObject, ObservableObject {
         let spokenText = transcript
         cleanup()
         transcript = ""
+        audioLevel = 0
 
         let handler = completionHandler
         completionHandler = nil
@@ -133,9 +138,49 @@ final class VoiceTranscriber: NSObject, ObservableObject {
         handler?(spokenText)
     }
 
+    private func publishAudioLevel(_ rawLevel: Double) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            let clamped = min(max(rawLevel, 0), 1)
+            let currentLevel = self.audioLevel
+            let smoothed = clamped > currentLevel
+                ? clamped
+                : currentLevel * 0.72 + clamped * 0.28
+            self.audioLevel = smoothed
+        }
+    }
+
+    private static func normalizedRMS(from buffer: AVAudioPCMBuffer) -> Double {
+        guard
+            let channelData = buffer.floatChannelData,
+            buffer.frameLength > 0
+        else {
+            return 0
+        }
+
+        let channelCount = Int(buffer.format.channelCount)
+        let frameCount = Int(buffer.frameLength)
+        var sumSquares = 0.0
+
+        for channel in 0..<channelCount {
+            let samples = channelData[channel]
+            for frame in 0..<frameCount {
+                let sample = Double(samples[frame])
+                sumSquares += sample * sample
+            }
+        }
+
+        let sampleCount = Double(frameCount * channelCount)
+        let rms = sqrt(sumSquares / sampleCount)
+        let decibels = 20 * log10(max(rms, 0.000_001))
+        let normalized = (decibels + 60) / 60
+        return min(max(normalized, 0), 1)
+    }
+
     private func fail(_ message: String) {
         permissionMessage = message
         isRecording = false
+        audioLevel = 0
 
         let handler = failureHandler
         completionHandler = nil

@@ -58,10 +58,12 @@ final class HomeFlowUITests: XCTestCase {
         XCTAssertTrue(speakButton.waitForExistence(timeout: 5))
         speakButton.press(forDuration: 0.8)
 
+        let confirmButton = app.buttons["ConfirmCreateReminderButton"]
         XCTAssertTrue(
-            app.navigationBars["Confirm Reminder"].waitForExistence(timeout: 5),
+            confirmButton.waitForExistence(timeout: 5),
             "Voice reminder confirmation did not appear."
         )
+        XCTAssertTrue(app.buttons["CancelVoiceReminderButton"].exists)
 
         keepScreenshot(named: "04-voice-confirmation")
 
@@ -70,7 +72,7 @@ final class HomeFlowUITests: XCTestCase {
             "Reminder should not be created before confirmation."
         )
 
-        app.buttons["ConfirmCreateReminderButton"].tap()
+        confirmButton.tap()
 
         XCTAssertTrue(
             app.otherElements["ReminderRow"].waitForExistence(timeout: 6),

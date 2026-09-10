@@ -78,15 +78,6 @@ struct HomeView: View {
             .sheet(isPresented: $isShowingSettings) {
                 SettingsView()
             }
-            .sheet(item: $pendingVoiceReminder) { draft in
-                VoiceReminderConfirmationView(draft: draft) { title, fireDate in
-                    confirmVoiceReminder(
-                        draft,
-                        title: title,
-                        fireDate: fireDate
-                    )
-                }
-            }
             .fullScreenCover(item: $presentedReminder) { reminder in
                 ReminderAlertView(
                     reminder: reminder,
@@ -106,6 +97,25 @@ struct HomeView: View {
                         phase: voicePhase,
                         transcript: voiceRecorder.transcript
                     )
+                    .transition(.opacity)
+                }
+            }
+            .overlay {
+                if let pendingVoiceReminder {
+                    VoiceReminderConfirmationOverlay(
+                        draft: pendingVoiceReminder,
+                        onCancel: {
+                            self.pendingVoiceReminder = nil
+                        },
+                        onConfirm: { title, fireDate in
+                            confirmVoiceReminder(
+                                pendingVoiceReminder,
+                                title: title,
+                                fireDate: fireDate
+                            )
+                        }
+                    )
+                    .id(pendingVoiceReminder.id)
                     .transition(.opacity)
                 }
             }
@@ -421,19 +431,21 @@ struct HomeView: View {
     }
 }
 
-private struct VoiceReminderConfirmationView: View {
+private struct VoiceReminderConfirmationOverlay: View {
     let draft: VoiceReminderDraft
+    let onCancel: () -> Void
     let onConfirm: (String, Date) -> Void
 
-    @Environment(\.dismiss) private var dismiss
     @State private var title: String
     @State private var fireDate: Date
 
     init(
         draft: VoiceReminderDraft,
+        onCancel: @escaping () -> Void,
         onConfirm: @escaping (String, Date) -> Void
     ) {
         self.draft = draft
+        self.onCancel = onCancel
         self.onConfirm = onConfirm
         _title = State(initialValue: draft.title)
         _fireDate = State(initialValue: max(draft.fireDate, Date().addingTimeInterval(60)))
@@ -444,62 +456,93 @@ private struct VoiceReminderConfirmationView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField("Reminder title", text: $title, axis: .vertical)
-                        .lineLimit(1...4)
-                        .accessibilityIdentifier("VoiceReminderTitleField")
-                } header: {
-                    Text("Task")
-                }
+        GeometryReader { proxy in
+            let cardHeight = proxy.size.height / 3
 
-                Section {
-                    DatePicker(
-                        "Remind at",
-                        selection: $fireDate,
-                        in: Date()...,
-                        displayedComponents: [.date, .hourAndMinute]
+            ZStack {
+                Color.black.opacity(0.28)
+                    .ignoresSafeArea()
+
+                VStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Task")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        TextField("Reminder title", text: $title, axis: .vertical)
+                            .lineLimit(1...2)
+                            .accessibilityIdentifier("VoiceReminderTitleField")
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        Color(.secondarySystemBackground),
+                        in: RoundedRectangle(cornerRadius: 8)
                     )
-                    .accessibilityIdentifier("VoiceReminderDatePicker")
 
-                    if draft.repeatRule != .once {
-                        Label(
-                            draft.repeatRule.displayName,
-                            systemImage: "repeat"
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Reminder time")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        DatePicker(
+                            "Reminder time",
+                            selection: $fireDate,
+                            in: Date()...,
+                            displayedComponents: [.date, .hourAndMinute]
                         )
-                        .foregroundStyle(.secondary)
+                        .labelsHidden()
+                        .accessibilityIdentifier("VoiceReminderDatePicker")
                     }
-                } header: {
-                    Text("Reminder time")
-                }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        Color(.secondarySystemBackground),
+                        in: RoundedRectangle(cornerRadius: 8)
+                    )
 
-                Section {
-                    Text(draft.originalText)
-                        .foregroundStyle(.secondary)
-                } header: {
-                    Text("Recognized speech")
+                    HStack(spacing: 12) {
+                        Button("Cancel") {
+                            onCancel()
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(
+                            Color.red,
+                            in: RoundedRectangle(cornerRadius: 8)
+                        )
+                        .foregroundStyle(.white)
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("CancelVoiceReminderButton")
+
+                        Button("Create") {
+                            onConfirm(trimmedTitle, fireDate)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(
+                            Color.green,
+                            in: RoundedRectangle(cornerRadius: 8)
+                        )
+                        .foregroundStyle(.white)
+                        .buttonStyle(.plain)
+                        .disabled(trimmedTitle.isEmpty)
+                        .opacity(trimmedTitle.isEmpty ? 0.5 : 1)
+                        .accessibilityIdentifier("ConfirmCreateReminderButton")
+                    }
                 }
+                .padding(16)
+                .frame(
+                    width: min(proxy.size.width - 32, 380),
+                    height: cardHeight
+                )
+                .background(
+                    .regularMaterial,
+                    in: RoundedRectangle(cornerRadius: 8)
+                )
+                .position(
+                    x: proxy.size.width / 2,
+                    y: proxy.size.height * 0.58
+                )
             }
-            .navigationTitle("Confirm Reminder")
-            .navigationBarTitleDisplayMode(.inline)
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("VoiceReminderConfirmation")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
-                        onConfirm(trimmedTitle, fireDate)
-                        dismiss()
-                    }
-                    .disabled(trimmedTitle.isEmpty)
-                    .accessibilityIdentifier("ConfirmCreateReminderButton")
-                }
-            }
         }
     }
 }

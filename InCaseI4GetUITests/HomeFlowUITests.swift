@@ -84,7 +84,7 @@ final class HomeFlowUITests: XCTestCase {
         repeatButton.tap()
 
         XCTAssertTrue(
-            app.otherElements["RepeatProPaywall"].waitForExistence(timeout: 5),
+            app.buttons["PurchaseRepeatProButton"].waitForExistence(timeout: 5),
             "Repeat Pro paywall did not appear."
         )
         keepScreenshot(named: "08-repeat-pro-paywall")

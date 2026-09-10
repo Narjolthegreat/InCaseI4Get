@@ -571,16 +571,24 @@ private struct VoiceReminderConfirmationOverlay: View {
                     x: proxy.size.width / 2,
                     y: proxy.size.height * 0.58
                 )
-            }
-            .accessibilityElement(children: .contain)
-                .accessibilityIdentifier("VoiceReminderConfirmation")
-        }
-        .sheet(isPresented: $showsPaywall) {
-            RepeatReminderProPaywallView(purchaseManager: purchaseManager) {
-                if let selectedLockedRule {
-                    repeatRule = selectedLockedRule
+
+                if showsPaywall {
+                    RepeatReminderProPaywallView(
+                        purchaseManager: purchaseManager,
+                        onPurchased: {
+                            if let selectedLockedRule {
+                                repeatRule = selectedLockedRule
+                            }
+                        },
+                        onClose: {
+                            showsPaywall = false
+                        }
+                    )
+                    .transition(.opacity)
                 }
             }
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("VoiceReminderConfirmation")
         }
     }
 
@@ -637,65 +645,71 @@ private struct VoiceReminderConfirmationOverlay: View {
 private struct RepeatReminderProPaywallView: View {
     @ObservedObject var purchaseManager: PurchaseManager
     let onPurchased: () -> Void
-
-    @Environment(\.dismiss) private var dismiss
+    let onClose: () -> Void
 
     var body: some View {
-        VStack(spacing: 18) {
-            Image(systemName: "repeat.circle.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(.orange)
+        ZStack {
+            Color.black.opacity(0.42)
+                .ignoresSafeArea()
 
-            Text("Unlock Repeating Reminders")
-                .font(.title2.bold())
-                .multilineTextAlignment(.center)
+            VStack(spacing: 18) {
+                Image(systemName: "repeat.circle.fill")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.orange)
 
-            Text("Pay once and keep daily, weekly and monthly reminders forever.")
-                .font(.body)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-
-            Button {
-                Task {
-                    if await purchaseManager.purchasePro() {
-                        onPurchased()
-                        dismiss()
-                    }
-                }
-            } label: {
-                Text(purchaseLabel)
-                    .font(.headline.bold())
-                    .frame(maxWidth: .infinity, minHeight: 50)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.orange)
-            .disabled(purchaseManager.isPurchasing)
-            .accessibilityIdentifier("PurchaseRepeatProButton")
-
-            Button("Restore Purchase") {
-                Task {
-                    if await purchaseManager.restorePurchases() {
-                        onPurchased()
-                        dismiss()
-                    }
-                }
-            }
-            .disabled(purchaseManager.isPurchasing)
-            .accessibilityIdentifier("RestoreRepeatProButton")
-
-            if let errorMessage = purchaseManager.errorMessage {
-                Text(errorMessage)
-                    .font(.caption)
-                    .foregroundStyle(.red)
+                Text("Unlock Repeating Reminders")
+                    .font(.title2.bold())
                     .multilineTextAlignment(.center)
-            }
 
-            Button("Close") {
-                dismiss()
+                Text("Pay once and keep daily, weekly and monthly reminders forever.")
+                    .font(.body)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+
+                Button {
+                    Task {
+                        if await purchaseManager.purchasePro() {
+                            onPurchased()
+                            onClose()
+                        }
+                    }
+                } label: {
+                    Text(purchaseLabel)
+                        .font(.headline.bold())
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.orange)
+                .disabled(purchaseManager.isPurchasing)
+                .accessibilityIdentifier("PurchaseRepeatProButton")
+
+                Button("Restore Purchase") {
+                    Task {
+                        if await purchaseManager.restorePurchases() {
+                            onPurchased()
+                            onClose()
+                        }
+                    }
+                }
+                .disabled(purchaseManager.isPurchasing)
+                .accessibilityIdentifier("RestoreRepeatProButton")
+
+                if let errorMessage = purchaseManager.errorMessage {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                }
+
+                Button("Close") {
+                    onClose()
+                }
+                .accessibilityIdentifier("ClosePaywallButton")
             }
-            .accessibilityIdentifier("ClosePaywallButton")
+            .padding(24)
+            .frame(maxWidth: 340)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
         }
-        .padding(24)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("RepeatProPaywall")
     }

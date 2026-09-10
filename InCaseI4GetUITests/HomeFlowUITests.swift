@@ -5,18 +5,16 @@ final class HomeFlowUITests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-
-        app = XCUIApplication()
-        app.launchArguments = ["-uiTesting", "-resetData"]
-        app.launch()
     }
 
     override func tearDownWithError() throws {
-        app.terminate()
+        app?.terminate()
         app = nil
     }
 
     func test01HomeEmptyState() {
+        launchApp()
+
         XCTAssertTrue(
             app.navigationBars["InCaseI4Get"].waitForExistence(timeout: 5),
             "Home screen did not appear."
@@ -28,6 +26,8 @@ final class HomeFlowUITests: XCTestCase {
     }
 
     func test02OpenSettings() {
+        launchApp()
+
         let settingsButton = app.buttons["HomeSettingsButton"]
         XCTAssertTrue(settingsButton.waitForExistence(timeout: 5))
         settingsButton.tap()
@@ -41,6 +41,8 @@ final class HomeFlowUITests: XCTestCase {
     }
 
     func test03OpenTextEntry() {
+        launchApp()
+
         let typeButton = app.buttons["HomeTypeButton"]
         XCTAssertTrue(typeButton.waitForExistence(timeout: 5))
         typeButton.tap()
@@ -54,6 +56,8 @@ final class HomeFlowUITests: XCTestCase {
     }
 
     func test04VoiceFlowScreenshotsAndConfirmation() {
+        launchApp()
+
         let speakButton = app.buttons["HomeSpeakButton"]
         XCTAssertTrue(speakButton.waitForExistence(timeout: 5))
         speakButton.press(forDuration: 0.8)
@@ -97,10 +101,7 @@ final class HomeFlowUITests: XCTestCase {
     }
 
     func test05ProUserCanChooseRepeatRule() {
-        app.terminate()
-        app = XCUIApplication()
-        app.launchArguments = ["-uiTesting", "-resetData", "-proUnlocked"]
-        app.launch()
+        launchApp(arguments: ["-proUnlocked"])
 
         let speakButton = app.buttons["HomeSpeakButton"]
         XCTAssertTrue(speakButton.waitForExistence(timeout: 5))
@@ -128,5 +129,11 @@ final class HomeFlowUITests: XCTestCase {
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+
+    private func launchApp(arguments: [String] = []) {
+        app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-resetData"] + arguments
+        app.launch()
     }
 }

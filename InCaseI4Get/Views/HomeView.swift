@@ -499,11 +499,12 @@ private struct VoiceReminderConfirmationOverlay: View {
                         in: RoundedRectangle(cornerRadius: 8)
                     )
 
-                    HStack(spacing: 12) {
+                    HStack(spacing: 20) {
                         Button("Cancel") {
                             onCancel()
                         }
-                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .font(.headline.bold())
+                        .frame(width: 132, minHeight: 46)
                         .background(
                             Color.red,
                             in: RoundedRectangle(cornerRadius: 8)
@@ -515,7 +516,8 @@ private struct VoiceReminderConfirmationOverlay: View {
                         Button("Create") {
                             onConfirm(trimmedTitle, fireDate)
                         }
-                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .font(.headline.bold())
+                        .frame(width: 132, minHeight: 46)
                         .background(
                             Color.green,
                             in: RoundedRectangle(cornerRadius: 8)
@@ -526,6 +528,7 @@ private struct VoiceReminderConfirmationOverlay: View {
                         .opacity(trimmedTitle.isEmpty ? 0.5 : 1)
                         .accessibilityIdentifier("ConfirmCreateReminderButton")
                     }
+                    .frame(maxWidth: .infinity)
                 }
                 .padding(16)
                 .frame(

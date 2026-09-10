@@ -10,12 +10,12 @@ private enum VoiceCapturePhase {
     case failed(String)
 }
 
-private struct VoiceReminderDraft: Identifiable {
+private struct ReminderDraft: Identifiable {
     let id = UUID()
     let title: String
     let fireDate: Date
     let repeatRule: ReminderRepeat
-    let originalText: String
+    let source: ReminderSource
 }
 
 struct HomeView: View {
@@ -24,12 +24,11 @@ struct HomeView: View {
     @Environment(AppSettings.self) private var settings
     @Query(sort: \ReminderItem.fireDate) private var reminders: [ReminderItem]
 
-    @State private var activeAddFlow: AddFlow?
     @State private var isShowingSettings = false
     @State private var presentedReminder: ReminderItem?
     @State private var voicePhase: VoiceCapturePhase?
     @State private var voiceDismissTask: Task<Void, Never>?
-    @State private var pendingVoiceReminder: VoiceReminderDraft?
+    @State private var pendingReminderDraft: ReminderDraft?
     @StateObject private var voiceRecorder = VoiceTranscriber()
     @StateObject private var purchaseManager = PurchaseManager()
 
@@ -74,9 +73,6 @@ struct HomeView: View {
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 bottomBar
             }
-            .sheet(item: $activeAddFlow) { flow in
-                AddReminderView(source: flow.source)
-            }
             .sheet(isPresented: $isShowingSettings) {
                 SettingsView()
             }
@@ -104,23 +100,23 @@ struct HomeView: View {
                 }
             }
             .overlay {
-                if let pendingVoiceReminder {
-                    VoiceReminderConfirmationOverlay(
-                        draft: pendingVoiceReminder,
+                if let pendingReminderDraft {
+                    ReminderConfirmationOverlay(
+                        draft: pendingReminderDraft,
                         purchaseManager: purchaseManager,
                         onCancel: {
-                            self.pendingVoiceReminder = nil
+                            self.pendingReminderDraft = nil
                         },
                         onConfirm: { title, fireDate, repeatRule in
-                            confirmVoiceReminder(
-                                pendingVoiceReminder,
+                            confirmReminder(
+                                pendingReminderDraft,
                                 title: title,
                                 fireDate: fireDate,
                                 repeatRule: repeatRule
                             )
                         }
                     )
-                    .id(pendingVoiceReminder.id)
+                    .id(pendingReminderDraft.id)
                     .transition(.opacity)
                 }
             }
@@ -220,7 +216,7 @@ struct HomeView: View {
             )
 
             Button {
-                activeAddFlow = AddFlow(source: .text)
+                showManualReminderEntry()
             } label: {
                 Label("Type", systemImage: "keyboard.fill")
                     .font(.body.weight(.semibold))
@@ -359,11 +355,11 @@ struct HomeView: View {
             try? await Task.sleep(for: .milliseconds(1_500))
 
             voicePhase = nil
-            pendingVoiceReminder = VoiceReminderDraft(
+            pendingReminderDraft = ReminderDraft(
                 title: parsed.title,
                 fireDate: max(fireDate, Date().addingTimeInterval(60)),
                 repeatRule: parsed.repeatRule,
-                originalText: trimmed
+                source: .voice
             )
         }
     }
@@ -374,13 +370,28 @@ struct HomeView: View {
         }
     }
 
-    private func confirmVoiceReminder(
-        _ draft: VoiceReminderDraft,
+    private func showManualReminderEntry() {
+        voiceDismissTask?.cancel()
+        voicePhase = nil
+        pendingReminderDraft = ReminderDraft(
+            title: "",
+            fireDate: Calendar.current.date(
+                byAdding: .minute,
+                value: 5,
+                to: Date()
+            ) ?? Date().addingTimeInterval(300),
+            repeatRule: .once,
+            source: .text
+        )
+    }
+
+    private func confirmReminder(
+        _ draft: ReminderDraft,
         title: String,
         fireDate: Date,
         repeatRule: ReminderRepeat
     ) {
-        pendingVoiceReminder = nil
+        pendingReminderDraft = nil
 
         Task { @MainActor in
             let granted = await NotificationScheduler.ensureAuthorization()
@@ -409,7 +420,7 @@ struct HomeView: View {
                 fireDate: fireDate,
                 repeatRule: repeatRule,
                 repeatEndDate: effectiveEndDate,
-                source: .voice,
+                source: draft.source,
                 languageCode: settings.language.rawValue,
                 earlyMinutes: settings.earlyMinutes,
                 strikeEnabled: settings.strikeEnabled
@@ -437,14 +448,10 @@ struct HomeView: View {
         }
     }
 
-    private struct AddFlow: Identifiable {
-        let id = UUID()
-        let source: ReminderSource
-    }
 }
 
-private struct VoiceReminderConfirmationOverlay: View {
-    let draft: VoiceReminderDraft
+private struct ReminderConfirmationOverlay: View {
+    let draft: ReminderDraft
     @ObservedObject var purchaseManager: PurchaseManager
     let onCancel: () -> Void
     let onConfirm: (String, Date, ReminderRepeat) -> Void
@@ -456,7 +463,7 @@ private struct VoiceReminderConfirmationOverlay: View {
     @State private var showsPaywall = false
 
     init(
-        draft: VoiceReminderDraft,
+        draft: ReminderDraft,
         purchaseManager: PurchaseManager,
         onCancel: @escaping () -> Void,
         onConfirm: @escaping (String, Date, ReminderRepeat) -> Void

@@ -40,19 +40,23 @@ final class HomeFlowUITests: XCTestCase {
         keepScreenshot(named: "02-settings")
     }
 
-    func test03OpenTextEntry() {
+    func test03TypeUsesSharedConfirmationOverlay() {
         launchApp()
 
         let typeButton = app.buttons["HomeTypeButton"]
         XCTAssertTrue(typeButton.waitForExistence(timeout: 5))
         typeButton.tap()
 
+        let confirmButton = app.buttons["ConfirmCreateReminderButton"]
         XCTAssertTrue(
-            app.navigationBars["New Reminder"].waitForExistence(timeout: 5),
-            "Text reminder screen did not appear."
+            confirmButton.waitForExistence(timeout: 5),
+            "Manual reminder confirmation did not appear."
         )
+        XCTAssertTrue(app.buttons["CancelVoiceReminderButton"].exists)
+        XCTAssertTrue(app.textFields["VoiceReminderTitleField"].exists)
+        XCTAssertFalse(confirmButton.isEnabled)
 
-        keepScreenshot(named: "03-add-text")
+        keepScreenshot(named: "03-manual-entry")
     }
 
     func test04VoiceFlowScreenshotsAndConfirmation() {

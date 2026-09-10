@@ -483,7 +483,7 @@ private struct VoiceReminderConfirmationOverlay: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let cardHeight = proxy.size.height * 0.40
+            let minimumCardHeight = proxy.size.height * 0.46
 
             ZStack {
                 Color.black.opacity(0.28)
@@ -558,11 +558,9 @@ private struct VoiceReminderConfirmationOverlay: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
-                .padding(16)
-                .frame(
-                    width: min(proxy.size.width - 32, 380),
-                    height: cardHeight
-                )
+                .padding(18)
+                .frame(width: min(proxy.size.width - 24, 420))
+                .frame(minHeight: minimumCardHeight)
                 .background(
                     .regularMaterial,
                     in: RoundedRectangle(cornerRadius: 8)

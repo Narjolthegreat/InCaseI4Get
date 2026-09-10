@@ -504,7 +504,7 @@ private struct VoiceReminderConfirmationOverlay: View {
                             onCancel()
                         }
                         .font(.headline.bold())
-                        .frame(width: 132, minHeight: 46)
+                        .frame(width: 132, height: 46)
                         .background(
                             Color.red,
                             in: RoundedRectangle(cornerRadius: 8)
@@ -517,7 +517,7 @@ private struct VoiceReminderConfirmationOverlay: View {
                             onConfirm(trimmedTitle, fireDate)
                         }
                         .font(.headline.bold())
-                        .frame(width: 132, minHeight: 46)
+                        .frame(width: 132, height: 46)
                         .background(
                             Color.green,
                             in: RoundedRectangle(cornerRadius: 8)

@@ -39,6 +39,16 @@ struct HomeView: View {
             }
             .navigationTitle("InCaseI4Get")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        isShowingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                    }
+                    .accessibilityLabel("Settings")
+                }
+            }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 bottomBar
             }
@@ -130,59 +140,31 @@ struct HomeView: View {
     }
 
     private var bottomBar: some View {
-        ZStack {
-            HStack {
-                Button {
-                    isShowingSettings = true
-                } label: {
-                    Image(systemName: "gearshape.fill")
-                        .font(.system(size: 19, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 44, height: 44)
-                        .background(Color(.systemGray6), in: Circle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Settings")
-
-                Spacer()
-
-                Button {
-                    activeAddFlow = AddFlow(source: .text)
-                } label: {
-                    Image(systemName: "keyboard.fill")
-                        .font(.system(size: 19, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 44, height: 44)
-                        .background(Color(.systemGray6), in: Circle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Type a reminder")
-            }
-
+        HStack(spacing: 12) {
             Button {
                 activeAddFlow = AddFlow(source: .voice)
             } label: {
-                VStack(spacing: 6) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.accentColor)
-                            .frame(width: 68, height: 68)
-                            .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
-                        Image(systemName: "mic.fill")
-                            .font(.system(size: 27, weight: .semibold))
-                            .foregroundStyle(.white)
-                    }
-                    Text("Speak")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                Label("Speak", systemImage: "mic.fill")
+                    .font(.body.weight(.semibold))
+                    .frame(maxWidth: .infinity, minHeight: 52)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.bordered)
+            .controlSize(.large)
             .accessibilityLabel("Create reminder by voice")
+
+            Button {
+                activeAddFlow = AddFlow(source: .text)
+            } label: {
+                Label("Type", systemImage: "keyboard.fill")
+                    .font(.body.weight(.semibold))
+                    .frame(maxWidth: .infinity, minHeight: 52)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+            .accessibilityLabel("Type a reminder")
         }
         .padding(.horizontal, 20)
-        .padding(.top, 10)
-        .padding(.bottom, 6)
+        .padding(.vertical, 12)
         .background(.bar)
     }
 

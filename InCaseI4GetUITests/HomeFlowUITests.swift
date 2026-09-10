@@ -53,10 +53,22 @@ final class HomeFlowUITests: XCTestCase {
         keepScreenshot(named: "03-add-text")
     }
 
-    func test04VoiceHoldRequiresConfirmation() {
+    func test04VoiceFlowScreenshotsAndConfirmation() {
         let speakButton = app.buttons["HomeSpeakButton"]
         XCTAssertTrue(speakButton.waitForExistence(timeout: 5))
         speakButton.press(forDuration: 0.8)
+
+        XCTAssertTrue(
+            app.staticTexts["正在转成文字"].waitForExistence(timeout: 3),
+            "Voice transcription stage did not appear."
+        )
+        keepScreenshot(named: "05-voice-transcript")
+
+        XCTAssertTrue(
+            app.staticTexts["正在概括任务"].waitForExistence(timeout: 4),
+            "Voice summary stage did not appear."
+        )
+        keepScreenshot(named: "06-voice-summary")
 
         let confirmButton = app.buttons["ConfirmCreateReminderButton"]
         XCTAssertTrue(
@@ -65,7 +77,7 @@ final class HomeFlowUITests: XCTestCase {
         )
         XCTAssertTrue(app.buttons["CancelVoiceReminderButton"].exists)
 
-        keepScreenshot(named: "04-voice-confirmation")
+        keepScreenshot(named: "07-voice-confirmation")
 
         XCTAssertFalse(
             app.otherElements["ReminderRow"].exists,

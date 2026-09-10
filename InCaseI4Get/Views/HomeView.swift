@@ -5,6 +5,7 @@ import UIKit
 private enum VoiceCapturePhase {
     case listening
     case processing
+    case summarizing(title: String, fireDate: Date)
     case completed(title: String, fireDate: Date)
     case failed(String)
 }
@@ -347,6 +348,12 @@ struct HomeView: View {
             }
 
             voiceDismissTask?.cancel()
+            voicePhase = .processing
+            try? await Task.sleep(for: .milliseconds(1_500))
+
+            voicePhase = .summarizing(title: parsed.title, fireDate: fireDate)
+            try? await Task.sleep(for: .milliseconds(1_500))
+
             voicePhase = nil
             pendingVoiceReminder = VoiceReminderDraft(
                 title: parsed.title,
@@ -555,10 +562,12 @@ private struct VoiceCaptureOverlay: View {
     let transcript: String
 
     private var isListening: Bool {
-        if case .listening = phase {
+        switch phase {
+        case .listening, .processing, .summarizing:
             return true
+        default:
+            return false
         }
-        return false
     }
 
     var body: some View {
@@ -590,7 +599,9 @@ private struct VoiceCaptureOverlay: View {
         case .listening:
             "正在聆听"
         case .processing:
-            "正在识别"
+            "正在转成文字"
+        case .summarizing:
+            "正在概括任务"
         case .completed:
             "已创建提醒"
         case .failed:
@@ -603,7 +614,9 @@ private struct VoiceCaptureOverlay: View {
         case .listening:
             transcript.isEmpty ? "请说出提醒内容，松开结束" : transcript
         case .processing:
-            "正在理解任务和时间"
+            transcript.isEmpty ? "正在把语音转成文字" : transcript
+        case .summarizing(let title, let fireDate):
+            "\(title) · \(fireDate.formatted(date: .abbreviated, time: .shortened))"
         case .completed(let title, let fireDate):
             "\(title) · \(fireDate.formatted(date: .abbreviated, time: .shortened))"
         case .failed(let message):

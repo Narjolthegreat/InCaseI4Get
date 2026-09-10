@@ -76,6 +76,7 @@ final class HomeFlowUITests: XCTestCase {
             "Voice reminder confirmation did not appear."
         )
         XCTAssertTrue(app.buttons["CancelVoiceReminderButton"].exists)
+        XCTAssertTrue(app.staticTexts["VoiceReminderWeekday"].exists)
 
         keepScreenshot(named: "07-voice-confirmation")
 

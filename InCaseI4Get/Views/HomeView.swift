@@ -510,14 +510,25 @@ private struct VoiceReminderConfirmationOverlay: View {
                         Text("Reminder time")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        DatePicker(
-                            "Reminder time",
-                            selection: $fireDate,
-                            in: Date()...,
-                            displayedComponents: [.date, .hourAndMinute]
-                        )
-                        .labelsHidden()
-                        .accessibilityIdentifier("VoiceReminderDatePicker")
+                        HStack(spacing: 8) {
+                            DatePicker(
+                                "Reminder time",
+                                selection: $fireDate,
+                                in: Date()...,
+                                displayedComponents: [.date, .hourAndMinute]
+                            )
+                            .labelsHidden()
+                            .accessibilityIdentifier("VoiceReminderDatePicker")
+
+                            Text(
+                                fireDate.formatted(
+                                    .dateTime.weekday(.wide)
+                                )
+                            )
+                            .font(.subheadline.bold())
+                            .foregroundStyle(.secondary)
+                            .accessibilityIdentifier("VoiceReminderWeekday")
+                        }
                     }
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)

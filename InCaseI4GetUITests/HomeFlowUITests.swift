@@ -79,6 +79,18 @@ final class HomeFlowUITests: XCTestCase {
 
         keepScreenshot(named: "07-voice-confirmation")
 
+        let repeatButton = app.buttons["VoiceReminderRepeatButton"]
+        XCTAssertTrue(repeatButton.exists)
+        repeatButton.tap()
+
+        XCTAssertTrue(
+            app.otherElements["RepeatProPaywall"].waitForExistence(timeout: 5),
+            "Repeat Pro paywall did not appear."
+        )
+        keepScreenshot(named: "08-repeat-pro-paywall")
+
+        app.buttons["ClosePaywallButton"].tap()
+
         XCTAssertFalse(
             app.otherElements["ReminderRow"].exists,
             "Reminder should not be created before confirmation."
@@ -89,6 +101,33 @@ final class HomeFlowUITests: XCTestCase {
         XCTAssertTrue(
             app.otherElements["ReminderRow"].waitForExistence(timeout: 6),
             "Voice reminder was not created."
+        )
+    }
+
+    func test05ProUserCanChooseRepeatRule() {
+        app.terminate()
+        app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-resetData", "-proUnlocked"]
+        app.launch()
+
+        let speakButton = app.buttons["HomeSpeakButton"]
+        XCTAssertTrue(speakButton.waitForExistence(timeout: 5))
+        speakButton.press(forDuration: 0.8)
+
+        let confirmButton = app.buttons["ConfirmCreateReminderButton"]
+        XCTAssertTrue(confirmButton.waitForExistence(timeout: 8))
+
+        let repeatMenu = app.buttons["VoiceReminderRepeatMenu"]
+        XCTAssertTrue(repeatMenu.exists)
+        repeatMenu.tap()
+        app.buttons["Weekly"].tap()
+
+        keepScreenshot(named: "09-voice-repeat-unlocked")
+
+        confirmButton.tap()
+        XCTAssertTrue(
+            app.otherElements["ReminderRow"].waitForExistence(timeout: 6),
+            "Pro repeating reminder was not created."
         )
     }
 

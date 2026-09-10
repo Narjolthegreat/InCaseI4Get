@@ -19,6 +19,7 @@
 		C10010C10010C10010C10010 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20010C20010C20010C20010 /* SettingsView.swift */; };
 		C10011C10011C10011C10011 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20011C20011C20011C20011 /* AppSettings.swift */; };
 		C10012C10012C10012C10012 /* PendingActionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20012C20012C20012C20012 /* PendingActionStore.swift */; };
+		C10013C10013C10013C10013 /* PurchaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20014C20014C20014C20014 /* PurchaseManager.swift */; };
 		E10001E10001E10001E10001 /* ReminderLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20001E20001E20001E20001 /* ReminderLogicTests.swift */; };
 		E10002E10002E10002E10002 /* HomeFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20002E20002E20002E20002 /* HomeFlowUITests.swift */; };
 /* End PBXBuildFile section */
@@ -54,6 +55,7 @@
 		C20011C20011C20011C20011 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		C20012C20012C20012C20012 /* PendingActionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingActionStore.swift; sourceTree = "<group>"; };
 		C20013C20013C20013C20013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C20014C20014C20014C20014 /* PurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseManager.swift; sourceTree = "<group>"; };
 		C80001C80001C80001C80001 /* InCaseI4Get.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InCaseI4Get.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E20001E20001E20001E20001 /* ReminderLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderLogicTests.swift; sourceTree = "<group>"; };
 		E20002E20002E20002E20002 /* HomeFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeFlowUITests.swift; sourceTree = "<group>"; };
@@ -132,6 +134,7 @@
 				C20004C20004C20004C20004 /* NotificationScheduler.swift */,
 				C20005C20005C20005C20005 /* SpeechService.swift */,
 				C20006C20006C20006C20006 /* VoiceTranscriber.swift */,
+				C20014C20014C20014C20014 /* PurchaseManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -315,6 +318,7 @@
 				C10010C10010C10010C10010 /* SettingsView.swift in Sources */,
 				C10011C10011C10011C10011 /* AppSettings.swift in Sources */,
 				C10012C10012C10012C10012 /* PendingActionStore.swift in Sources */,
+				C10013C10013C10013C10013 /* PurchaseManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

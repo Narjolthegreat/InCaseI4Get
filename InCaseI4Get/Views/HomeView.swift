@@ -31,6 +31,7 @@ struct HomeView: View {
     @State private var voiceDismissTask: Task<Void, Never>?
     @State private var pendingVoiceReminder: VoiceReminderDraft?
     @StateObject private var voiceRecorder = VoiceTranscriber()
+    @StateObject private var purchaseManager = PurchaseManager()
 
     private var activeReminders: [ReminderItem] {
         reminders.filter { !$0.isCompleted && !$0.shouldBeRemoved(at: Date()) }
@@ -105,14 +106,16 @@ struct HomeView: View {
                 if let pendingVoiceReminder {
                     VoiceReminderConfirmationOverlay(
                         draft: pendingVoiceReminder,
+                        purchaseManager: purchaseManager,
                         onCancel: {
                             self.pendingVoiceReminder = nil
                         },
-                        onConfirm: { title, fireDate in
+                        onConfirm: { title, fireDate, repeatRule in
                             confirmVoiceReminder(
                                 pendingVoiceReminder,
                                 title: title,
-                                fireDate: fireDate
+                                fireDate: fireDate,
+                                repeatRule: repeatRule
                             )
                         }
                     )
@@ -373,7 +376,8 @@ struct HomeView: View {
     private func confirmVoiceReminder(
         _ draft: VoiceReminderDraft,
         title: String,
-        fireDate: Date
+        fireDate: Date,
+        repeatRule: ReminderRepeat
     ) {
         pendingVoiceReminder = nil
 
@@ -396,13 +400,13 @@ struct HomeView: View {
                 return
             }
 
-            let effectiveEndDate = draft.repeatRule == .once
+            let effectiveEndDate = repeatRule == .once
                 ? nil
                 : Calendar.current.date(byAdding: .day, value: 7, to: fireDate)
             let item = ReminderItem(
                 title: cleanTitle,
                 fireDate: fireDate,
-                repeatRule: draft.repeatRule,
+                repeatRule: repeatRule,
                 repeatEndDate: effectiveEndDate,
                 source: .voice,
                 languageCode: settings.language.rawValue,
@@ -440,31 +444,46 @@ struct HomeView: View {
 
 private struct VoiceReminderConfirmationOverlay: View {
     let draft: VoiceReminderDraft
+    @ObservedObject var purchaseManager: PurchaseManager
     let onCancel: () -> Void
-    let onConfirm: (String, Date) -> Void
+    let onConfirm: (String, Date, ReminderRepeat) -> Void
 
     @State private var title: String
     @State private var fireDate: Date
+    @State private var repeatRule: ReminderRepeat
+    @State private var selectedLockedRule: ReminderRepeat?
+    @State private var showsPaywall = false
 
     init(
         draft: VoiceReminderDraft,
+        purchaseManager: PurchaseManager,
         onCancel: @escaping () -> Void,
-        onConfirm: @escaping (String, Date) -> Void
+        onConfirm: @escaping (String, Date, ReminderRepeat) -> Void
     ) {
         self.draft = draft
+        self.purchaseManager = purchaseManager
         self.onCancel = onCancel
         self.onConfirm = onConfirm
         _title = State(initialValue: draft.title)
         _fireDate = State(initialValue: max(draft.fireDate, Date().addingTimeInterval(60)))
+        _repeatRule = State(initialValue: draft.repeatRule)
     }
 
     private var trimmedTitle: String {
         title.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var repeatRequiresPro: Bool {
+        repeatRule != .once && !purchaseManager.isPro
+    }
+
+    private var canCreate: Bool {
+        !trimmedTitle.isEmpty && !repeatRequiresPro
+    }
+
     var body: some View {
         GeometryReader { proxy in
-            let cardHeight = proxy.size.height / 3
+            let cardHeight = proxy.size.height * 0.40
 
             ZStack {
                 Color.black.opacity(0.28)
@@ -506,6 +525,8 @@ private struct VoiceReminderConfirmationOverlay: View {
                         in: RoundedRectangle(cornerRadius: 8)
                     )
 
+                    repeatBox
+
                     HStack(spacing: 20) {
                         Button("Cancel") {
                             onCancel()
@@ -521,7 +542,7 @@ private struct VoiceReminderConfirmationOverlay: View {
                         .accessibilityIdentifier("CancelVoiceReminderButton")
 
                         Button("Create") {
-                            onConfirm(trimmedTitle, fireDate)
+                            onConfirm(trimmedTitle, fireDate, repeatRule)
                         }
                         .font(.headline.bold())
                         .frame(width: 132, height: 46)
@@ -531,8 +552,8 @@ private struct VoiceReminderConfirmationOverlay: View {
                         )
                         .foregroundStyle(.white)
                         .buttonStyle(.plain)
-                        .disabled(trimmedTitle.isEmpty)
-                        .opacity(trimmedTitle.isEmpty ? 0.5 : 1)
+                        .disabled(!canCreate)
+                        .opacity(canCreate ? 1 : 0.5)
                         .accessibilityIdentifier("ConfirmCreateReminderButton")
                     }
                     .frame(maxWidth: .infinity)
@@ -552,8 +573,138 @@ private struct VoiceReminderConfirmationOverlay: View {
                 )
             }
             .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("VoiceReminderConfirmation")
+                .accessibilityIdentifier("VoiceReminderConfirmation")
         }
+        .sheet(isPresented: $showsPaywall) {
+            RepeatReminderProPaywallView(purchaseManager: purchaseManager) {
+                if let selectedLockedRule {
+                    repeatRule = selectedLockedRule
+                }
+            }
+        }
+    }
+
+    private var repeatBox: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Repeat")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            if purchaseManager.isPro {
+                Menu {
+                    ForEach(ReminderRepeat.allCases) { rule in
+                        Button(rule.displayName) {
+                            repeatRule = rule
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Text(repeatRule.displayName)
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .accessibilityIdentifier("VoiceReminderRepeatMenu")
+            } else {
+                Button {
+                    selectedLockedRule = repeatRule == .once ? .daily : repeatRule
+                    showsPaywall = true
+                } label: {
+                    HStack {
+                        Text(repeatRule.displayName)
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "lock.fill")
+                            .foregroundStyle(.orange)
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("VoiceReminderRepeatButton")
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            Color(.secondarySystemBackground),
+            in: RoundedRectangle(cornerRadius: 8)
+        )
+    }
+}
+
+private struct RepeatReminderProPaywallView: View {
+    @ObservedObject var purchaseManager: PurchaseManager
+    let onPurchased: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 18) {
+            Image(systemName: "repeat.circle.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(.orange)
+
+            Text("Unlock Repeating Reminders")
+                .font(.title2.bold())
+                .multilineTextAlignment(.center)
+
+            Text("Pay once and keep daily, weekly and monthly reminders forever.")
+                .font(.body)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
+
+            Button {
+                Task {
+                    if await purchaseManager.purchasePro() {
+                        onPurchased()
+                        dismiss()
+                    }
+                }
+            } label: {
+                Text(purchaseLabel)
+                    .font(.headline.bold())
+                    .frame(maxWidth: .infinity, minHeight: 50)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.orange)
+            .disabled(purchaseManager.isPurchasing)
+            .accessibilityIdentifier("PurchaseRepeatProButton")
+
+            Button("Restore Purchase") {
+                Task {
+                    if await purchaseManager.restorePurchases() {
+                        onPurchased()
+                        dismiss()
+                    }
+                }
+            }
+            .disabled(purchaseManager.isPurchasing)
+            .accessibilityIdentifier("RestoreRepeatProButton")
+
+            if let errorMessage = purchaseManager.errorMessage {
+                Text(errorMessage)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button("Close") {
+                dismiss()
+            }
+            .accessibilityIdentifier("ClosePaywallButton")
+        }
+        .padding(24)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("RepeatProPaywall")
+    }
+
+    private var purchaseLabel: String {
+        if let product = purchaseManager.product {
+            return "Unlock Forever · \(product.displayPrice)"
+        }
+        return "Unlock Forever"
     }
 }
 

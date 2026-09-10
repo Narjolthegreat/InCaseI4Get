@@ -1,3 +1,4 @@
+import Foundation
 import SwiftData
 import SwiftUI
 import UIKit
@@ -72,7 +73,9 @@ struct AddReminderView: View {
                 strikeEnabled = settings.strikeEnabled
                 if source == .voice && !didAutoStartVoice {
                     didAutoStartVoice = true
-                    startVoiceInput()
+                    if !ProcessInfo.processInfo.arguments.contains("-uiTesting") {
+                        startVoiceInput()
+                    }
                 }
             }
         }

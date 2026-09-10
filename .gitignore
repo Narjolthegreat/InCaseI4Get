@@ -10,3 +10,6 @@ xcuserdata/
 # Swift Package Manager (if introduced later)
 .build/
 /.swiftpm/
+
+# Local CI artifacts
+test_result/

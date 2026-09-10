@@ -29,7 +29,38 @@
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
       <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "E60001E60001E60001E60001"
+               BuildableName = "InCaseI4GetTests.xctest"
+               BlueprintName = "InCaseI4GetTests"
+               ReferencedContainer = "container:InCaseI4Get.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "E60002E60002E60002E60002"
+               BuildableName = "InCaseI4GetUITests.xctest"
+               BlueprintName = "InCaseI4GetUITests"
+               ReferencedContainer = "container:InCaseI4Get.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "C50001C50001C50001C50001"
+            BuildableName = "InCaseI4Get.app"
+            BlueprintName = "InCaseI4Get"
+            ReferencedContainer = "container:InCaseI4Get.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"

@@ -47,6 +47,7 @@ struct HomeView: View {
                         Image(systemName: "gearshape.fill")
                     }
                     .accessibilityLabel("Settings")
+                    .accessibilityIdentifier("HomeSettingsButton")
                 }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -151,6 +152,7 @@ struct HomeView: View {
             .buttonStyle(.bordered)
             .controlSize(.large)
             .accessibilityLabel("Create reminder by voice")
+            .accessibilityIdentifier("HomeSpeakButton")
 
             Button {
                 activeAddFlow = AddFlow(source: .text)
@@ -162,6 +164,7 @@ struct HomeView: View {
             .buttonStyle(.bordered)
             .controlSize(.large)
             .accessibilityLabel("Type a reminder")
+            .accessibilityIdentifier("HomeTypeButton")
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)

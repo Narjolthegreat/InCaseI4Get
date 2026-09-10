@@ -38,6 +38,7 @@ jobs:
           UDID=$(xcrun simctl list devices available | \
             perl -ne 'if (/^\s*(?:iPhone .*?) \(([0-9A-F-]+)\)/) { print "$1\n"; exit }')
           echo "Using simulator: $UDID"
+          echo "SIMULATOR_UDID=$UDID" >> "$GITHUB_ENV"
           xcrun simctl boot "$UDID" || true
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" \
@@ -50,11 +51,34 @@ jobs:
             --predicate 'process == "InCaseI4Get"' > artifacts/simulator.log || true
           echo "App launch attempt finished"
 
+      - name: Run unit and UI tests
+        run: |
+          xcodebuild test \
+            -project InCaseI4Get.xcodeproj \
+            -scheme InCaseI4Get \
+            -configuration Debug \
+            -destination "id=$SIMULATOR_UDID" \
+            -derivedDataPath DerivedData \
+            -resultBundlePath TestResults.xcresult \
+            -parallel-testing-enabled NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Export test screenshots
+        if: always()
+        run: |
+          if [ -d TestResults.xcresult ]; then
+            mkdir -p artifacts/test-attachments
+            xcrun xcresulttool export attachments \
+              --path TestResults.xcresult \
+              --output-path artifacts/test-attachments
+          fi
+
       - name: Upload screenshots and logs
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ios-simulator-results
           path: |
-            artifacts/*.png
-            artifacts/*.log
+            artifacts/**
+            TestResults.xcresult
           if-no-files-found: error

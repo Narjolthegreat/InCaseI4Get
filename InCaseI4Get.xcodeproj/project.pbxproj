@@ -19,7 +19,26 @@
 		C10010C10010C10010C10010 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20010C20010C20010C20010 /* SettingsView.swift */; };
 		C10011C10011C10011C10011 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20011C20011C20011C20011 /* AppSettings.swift */; };
 		C10012C10012C10012C10012 /* PendingActionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20012C20012C20012C20012 /* PendingActionStore.swift */; };
+		E10001E10001E10001E10001 /* ReminderLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20001E20001E20001E20001 /* ReminderLogicTests.swift */; };
+		E10002E10002E10002E10002 /* HomeFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20002E20002E20002E20002 /* HomeFlowUITests.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E90002E90002E90002E90002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C50002C50002C50002C50002 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C50001C50001C50001C50001;
+			remoteInfo = InCaseI4Get;
+		};
+		E90004E90004E90004E90004 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C50002C50002C50002C50002 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C50001C50001C50001C50001;
+			remoteInfo = InCaseI4Get;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		C20001C20001C20001C20001 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -36,10 +55,28 @@
 		C20012C20012C20012C20012 /* PendingActionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingActionStore.swift; sourceTree = "<group>"; };
 		C20013C20013C20013C20013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C80001C80001C80001C80001 /* InCaseI4Get.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InCaseI4Get.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E20001E20001E20001E20001 /* ReminderLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderLogicTests.swift; sourceTree = "<group>"; };
+		E20002E20002E20002E20002 /* HomeFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeFlowUITests.swift; sourceTree = "<group>"; };
+		E20003E20003E20003E20003 /* InCaseI4GetTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InCaseI4GetTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E20004E20004E20004E20004 /* InCaseI4GetUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InCaseI4GetUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		C40002C40002C40002C40002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E40001E40001E40001E40001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E40002E40002E40002E40002 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -53,6 +90,8 @@
 			isa = PBXGroup;
 			children = (
 				C30002C30002C30002C30002 /* InCaseI4Get */,
+				E30001E30001E30001E30001 /* InCaseI4GetTests */,
+				E30002E30002E30002E30002 /* InCaseI4GetUITests */,
 				C30009C30009C30009C30009 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -129,8 +168,26 @@
 			isa = PBXGroup;
 			children = (
 				C80001C80001C80001C80001 /* InCaseI4Get.app */,
+				E20003E20003E20003E20003 /* InCaseI4GetTests.xctest */,
+				E20004E20004E20004E20004 /* InCaseI4GetUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		E30001E30001E30001E30001 /* InCaseI4GetTests */ = {
+			isa = PBXGroup;
+			children = (
+				E20001E20001E20001E20001 /* ReminderLogicTests.swift */,
+			);
+			path = InCaseI4GetTests;
+			sourceTree = "<group>";
+		};
+		E30002E30002E30002E30002 /* InCaseI4GetUITests */ = {
+			isa = PBXGroup;
+			children = (
+				E20002E20002E20002E20002 /* HomeFlowUITests.swift */,
+			);
+			path = InCaseI4GetUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -153,6 +210,40 @@
 			productReference = C80001C80001C80001C80001 /* InCaseI4Get.app */;
 			productType = "com.apple.product-type.application";
 		};
+		E60001E60001E60001E60001 /* InCaseI4GetTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E60003E60003E60003E60003 /* Build configuration list for PBXNativeTarget "InCaseI4GetTests" */;
+			buildPhases = (
+				E50001E50001E50001E50001 /* Sources */,
+				E40001E40001E40001E40001 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E90001E90001E90001E90001 /* PBXTargetDependency */,
+			);
+			name = InCaseI4GetTests;
+			productName = InCaseI4GetTests;
+			productReference = E20003E20003E20003E20003 /* InCaseI4GetTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		E60002E60002E60002E60002 /* InCaseI4GetUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E60004E60004E60004E60004 /* Build configuration list for PBXNativeTarget "InCaseI4GetUITests" */;
+			buildPhases = (
+				E50002E50002E50002E50002 /* Sources */,
+				E40002E40002E40002E40002 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E90003E90003E90003E90003 /* PBXTargetDependency */,
+			);
+			name = InCaseI4GetUITests;
+			productName = InCaseI4GetUITests;
+			productReference = E20004E20004E20004E20004 /* InCaseI4GetUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -165,6 +256,14 @@
 				TargetAttributes = {
 					C50001C50001C50001C50001 = {
 						CreatedOnToolsVersion = 15.0;
+					};
+					E60001E60001E60001E60001 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = C50001C50001C50001C50001;
+					};
+					E60002E60002E60002E60002 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = C50001C50001C50001C50001;
 					};
 				};
 			};
@@ -183,6 +282,8 @@
 			projectRoot = "";
 			targets = (
 				C50001C50001C50001C50001 /* InCaseI4Get */,
+				E60001E60001E60001E60001 /* InCaseI4GetTests */,
+				E60002E60002E60002E60002 /* InCaseI4GetUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -217,7 +318,36 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E50001E50001E50001E50001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E10001E10001E10001E10001 /* ReminderLogicTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E50002E50002E50002E50002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E10002E10002E10002E10002 /* HomeFlowUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E90001E90001E90001E90001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C50001C50001C50001C50001 /* InCaseI4Get */;
+			targetProxy = E90002E90002E90002E90002 /* PBXContainerItemProxy */;
+		};
+		E90003E90003E90003E90003 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C50001C50001C50001C50001 /* InCaseI4Get */;
+			targetProxy = E90004E90004E90004E90004 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		C70001C70001C70001C70001 /* Debug */ = {
@@ -384,6 +514,100 @@
 			};
 			name = Release;
 		};
+		E70001E70001E70001E70001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.incasei4get.InCaseI4GetTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/InCaseI4Get.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/InCaseI4Get";
+			};
+			name = Debug;
+		};
+		E70002E70002E70002E70002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.incasei4get.InCaseI4GetTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/InCaseI4Get.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/InCaseI4Get";
+			};
+			name = Release;
+		};
+		E70003E70003E70003E70003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.incasei4get.InCaseI4GetUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = InCaseI4Get;
+			};
+			name = Debug;
+		};
+		E70004E70004E70004E70004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.incasei4get.InCaseI4GetUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = InCaseI4Get;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -401,6 +625,24 @@
 			buildConfigurations = (
 				C70003C70003C70003C70003 /* Debug */,
 				C70004C70004C70004C70004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E60003E60003E60003E60003 /* Build configuration list for PBXNativeTarget "InCaseI4GetTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E70001E70001E70001E70001 /* Debug */,
+				E70002E70002E70002E70002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E60004E60004E60004E60004 /* Build configuration list for PBXNativeTarget "InCaseI4GetUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E70003E70003E70003E70003 /* Debug */,
+				E70004E70004E70004E70004 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

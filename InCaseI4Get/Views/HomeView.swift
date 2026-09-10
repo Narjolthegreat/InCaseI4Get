@@ -58,7 +58,7 @@ struct HomeView: View {
                     reminderList
                 }
             }
-            .navigationTitle("InCaseI4Get")
+            .navigationTitle("In Case I Forget")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

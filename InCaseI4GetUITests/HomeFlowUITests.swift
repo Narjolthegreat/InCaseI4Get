@@ -16,7 +16,7 @@ final class HomeFlowUITests: XCTestCase {
         launchApp()
 
         XCTAssertTrue(
-            app.navigationBars["InCaseI4Get"].waitForExistence(timeout: 5),
+            app.navigationBars["In Case I Forget"].waitForExistence(timeout: 5),
             "Home screen did not appear."
         )
         XCTAssertTrue(app.buttons["HomeTypeButton"].exists)

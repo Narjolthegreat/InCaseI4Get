@@ -253,8 +253,12 @@ struct ReminderSentenceParser {
         var fireDate: Date?
 
         for (rule, expressions) in repeatExpressions {
-            for expression in expressions where mutable.range(of: expression, options: .caseInsensitive).location != NSNotFound {
+            for expression in expressions {
                 let range = mutable.range(of: expression, options: .caseInsensitive)
+                guard range.location != NSNotFound,
+                      NSMaxRange(range) <= mutable.length else {
+                    continue
+                }
                 mutable = mutable.replacingCharacters(in: range, with: " ") as NSString
                 repeatRule = rule
                 break
@@ -264,7 +268,9 @@ struct ReminderSentenceParser {
         let dateResult = detectDate(in: text)
         if let matchedDate = dateResult.date {
             fireDate = matchedDate
-            if let range = dateResult.range {
+            if let range = dateResult.range,
+               range.location != NSNotFound,
+               NSMaxRange(range) <= mutable.length {
                 mutable = mutable.replacingCharacters(in: range, with: " ") as NSString
             }
         }

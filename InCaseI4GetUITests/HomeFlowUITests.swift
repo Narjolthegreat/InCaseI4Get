@@ -53,17 +53,22 @@ final class HomeFlowUITests: XCTestCase {
         keepScreenshot(named: "03-add-text")
     }
 
-    func test04OpenVoiceEntry() {
+    func test04VoiceHoldCreatesReminder() {
         let speakButton = app.buttons["HomeSpeakButton"]
         XCTAssertTrue(speakButton.waitForExistence(timeout: 5))
-        speakButton.tap()
+        speakButton.press(forDuration: 0.8)
 
         XCTAssertTrue(
-            app.navigationBars["New Reminder"].waitForExistence(timeout: 5),
-            "Voice reminder screen did not appear."
+            app.otherElements["VoiceCaptureOverlay"].waitForExistence(timeout: 2),
+            "Voice capture overlay did not appear."
         )
 
-        keepScreenshot(named: "04-add-voice")
+        keepScreenshot(named: "04-voice-overlay")
+
+        XCTAssertTrue(
+            app.otherElements["ReminderRow"].waitForExistence(timeout: 6),
+            "Voice reminder was not created."
+        )
     }
 
     private func keepScreenshot(named name: String) {

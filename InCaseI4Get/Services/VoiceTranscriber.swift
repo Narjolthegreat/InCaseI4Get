@@ -11,15 +11,32 @@ final class VoiceTranscriber: NSObject, ObservableObject {
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private var completionHandler: ((String) -> Void)?
+    private var failureHandler: ((String) -> Void)?
     private var hasFinished = false
+    private var stopRequested = false
 
-    func start(languageCode: String, completion: @escaping (String) -> Void) {
+    private var isUITesting: Bool {
+        ProcessInfo.processInfo.arguments.contains("-uiTesting")
+    }
+
+    func start(
+        languageCode: String,
+        completion: @escaping (String) -> Void,
+        failure: @escaping (String) -> Void = { _ in }
+    ) {
         guard !isRecording else { return }
 
         completionHandler = completion
+        failureHandler = failure
         hasFinished = false
+        stopRequested = false
         transcript = ""
         permissionMessage = nil
+
+        if isUITesting {
+            isRecording = true
+            return
+        }
 
         Task { @MainActor [weak self] in
             guard let self else { return }
@@ -27,7 +44,7 @@ final class VoiceTranscriber: NSObject, ObservableObject {
             let speechGranted = await requestSpeechAccess()
 
             guard micGranted, speechGranted else {
-                permissionMessage = "Microphone and speech recognition permission are required."
+                fail("Microphone and speech recognition permission are required.")
                 return
             }
 
@@ -35,7 +52,12 @@ final class VoiceTranscriber: NSObject, ObservableObject {
                 let recognizer = SFSpeechRecognizer(locale: Locale(identifier: languageCode)),
                 recognizer.isAvailable
             else {
-                permissionMessage = "Speech recognition is unavailable for this language. You can still type."
+                fail("Speech recognition is unavailable for this language. You can still type.")
+                return
+            }
+
+            guard !stopRequested else {
+                fail("No speech was captured.")
                 return
             }
 
@@ -44,7 +66,13 @@ final class VoiceTranscriber: NSObject, ObservableObject {
     }
 
     func stop() {
-        guard isRecording else { return }
+        guard isRecording else {
+            stopRequested = true
+            return
+        }
+        if isUITesting {
+            transcript = "Take medicine on January 1, 2030 at 8:00 PM"
+        }
         finish()
     }
 
@@ -72,7 +100,7 @@ final class VoiceTranscriber: NSObject, ObservableObject {
             isRecording = true
             permissionMessage = nil
         } catch {
-            permissionMessage = "Unable to start the microphone."
+            fail("Unable to start the microphone.")
             cleanup()
             return
         }
@@ -101,7 +129,18 @@ final class VoiceTranscriber: NSObject, ObservableObject {
 
         let handler = completionHandler
         completionHandler = nil
+        failureHandler = nil
         handler?(spokenText)
+    }
+
+    private func fail(_ message: String) {
+        permissionMessage = message
+        isRecording = false
+
+        let handler = failureHandler
+        completionHandler = nil
+        failureHandler = nil
+        handler?(message)
     }
 
     private func cleanup() {

@@ -47,5 +47,7 @@ struct ReminderRowView: View {
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("ReminderRow")
     }
 }

@@ -2,6 +2,13 @@ import SwiftData
 import SwiftUI
 import UIKit
 
+private enum VoiceCapturePhase {
+    case listening
+    case processing
+    case completed(title: String, fireDate: Date)
+    case failed(String)
+}
+
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
@@ -11,6 +18,9 @@ struct HomeView: View {
     @State private var activeAddFlow: AddFlow?
     @State private var isShowingSettings = false
     @State private var presentedReminder: ReminderItem?
+    @State private var voicePhase: VoiceCapturePhase?
+    @State private var voiceDismissTask: Task<Void, Never>?
+    @StateObject private var voiceRecorder = VoiceTranscriber()
 
     private var activeReminders: [ReminderItem] {
         reminders.filter { !$0.isCompleted && !$0.shouldBeRemoved(at: Date()) }
@@ -71,6 +81,15 @@ struct HomeView: View {
                         snoozeReminder(id: reminder.id)
                     }
                 )
+            }
+            .overlay {
+                if let voicePhase {
+                    VoiceCaptureOverlay(
+                        phase: voicePhase,
+                        transcript: voiceRecorder.transcript
+                    )
+                    .transition(.opacity)
+                }
             }
             .task {
                 await handleLaunchTasks()
@@ -143,7 +162,7 @@ struct HomeView: View {
     private var bottomBar: some View {
         HStack(spacing: 12) {
             Button {
-                activeAddFlow = AddFlow(source: .voice)
+                // Press-and-hold is handled by the gesture below.
             } label: {
                 Label("Speak", systemImage: "mic.fill")
                     .font(.body.weight(.semibold))
@@ -153,6 +172,19 @@ struct HomeView: View {
             .controlSize(.large)
             .accessibilityLabel("Create reminder by voice")
             .accessibilityIdentifier("HomeSpeakButton")
+            .accessibilityHint("Press and hold to speak")
+            .onLongPressGesture(
+                minimumDuration: 0.1,
+                maximumDistance: 60,
+                pressing: { isPressing in
+                    if isPressing {
+                        startVoiceCapture()
+                    } else {
+                        stopVoiceCapture()
+                    }
+                },
+                perform: {}
+            )
 
             Button {
                 activeAddFlow = AddFlow(source: .text)
@@ -252,9 +284,176 @@ struct HomeView: View {
         reminders.first { $0.id == id }
     }
 
+    private func startVoiceCapture() {
+        guard voicePhase == nil else { return }
+        voiceDismissTask?.cancel()
+        voicePhase = .listening
+        voiceRecorder.start(
+            languageCode: settings.language.speechLocale,
+            completion: handleVoiceTranscript,
+            failure: handleVoiceFailure
+        )
+    }
+
+    private func stopVoiceCapture() {
+        guard case .listening = voicePhase else { return }
+        voicePhase = .processing
+        voiceRecorder.stop()
+    }
+
+    private func handleVoiceTranscript(_ text: String) {
+        Task { @MainActor in
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else {
+                showVoiceResult(.failed("没有听清，请按住 Speak 再说一次。"), duration: .seconds(2))
+                return
+            }
+
+            let parsed = ReminderSentenceParser.parse(trimmed)
+            guard let fireDate = parsed.fireDate else {
+                showVoiceResult(
+                    .failed("没有识别出明确的提醒时间，请说得具体一些。"),
+                    duration: .seconds(2.5)
+                )
+                return
+            }
+
+            let granted = await NotificationScheduler.ensureAuthorization()
+            guard granted else {
+                showVoiceResult(
+                    .failed("需要通知权限才能创建提醒，请到系统设置中允许通知。"),
+                    duration: .seconds(2.5)
+                )
+                return
+            }
+
+            let effectiveEndDate = parsed.repeatRule == .once
+                ? nil
+                : Calendar.current.date(byAdding: .day, value: 7, to: Date())
+            let item = ReminderItem(
+                title: parsed.title,
+                fireDate: fireDate,
+                repeatRule: parsed.repeatRule,
+                repeatEndDate: effectiveEndDate,
+                source: .voice,
+                languageCode: settings.language.rawValue,
+                earlyMinutes: settings.earlyMinutes,
+                strikeEnabled: settings.strikeEnabled
+            )
+            modelContext.insert(item)
+            try? modelContext.save()
+            await NotificationScheduler.schedule(item)
+
+            showVoiceResult(
+                .completed(title: parsed.title, fireDate: fireDate),
+                duration: .seconds(1.6)
+            )
+        }
+    }
+
+    private func handleVoiceFailure(_ message: String) {
+        Task { @MainActor in
+            showVoiceResult(.failed(message), duration: .seconds(2.5))
+        }
+    }
+
+    private func showVoiceResult(_ phase: VoiceCapturePhase, duration: Duration) {
+        voiceDismissTask?.cancel()
+        voicePhase = phase
+        voiceDismissTask = Task {
+            try? await Task.sleep(for: duration)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                voicePhase = nil
+            }
+        }
+    }
+
     private struct AddFlow: Identifiable {
         let id = UUID()
         let source: ReminderSource
+    }
+}
+
+private struct VoiceCaptureOverlay: View {
+    let phase: VoiceCapturePhase
+    let transcript: String
+
+    private var isListening: Bool {
+        if case .listening = phase {
+            return true
+        }
+        return false
+    }
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.35)
+                .ignoresSafeArea()
+
+            VStack(spacing: 18) {
+                VoiceWaveformView(isActive: isListening)
+
+                Text(title)
+                    .font(.headline)
+
+                Text(detail)
+                    .font(.subheadline)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(24)
+            .frame(maxWidth: 320)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("VoiceCaptureOverlay")
+    }
+
+    private var title: String {
+        switch phase {
+        case .listening:
+            "正在聆听"
+        case .processing:
+            "正在识别"
+        case .completed:
+            "已创建提醒"
+        case .failed:
+            "没有完成"
+        }
+    }
+
+    private var detail: String {
+        switch phase {
+        case .listening:
+            transcript.isEmpty ? "请说出提醒内容，松开结束" : transcript
+        case .processing:
+            "正在理解任务和时间"
+        case .completed(let title, let fireDate):
+            "\(title) · \(fireDate.formatted(date: .abbreviated, time: .shortened))"
+        case .failed(let message):
+            message
+        }
+    }
+}
+
+private struct VoiceWaveformView: View {
+    let isActive: Bool
+
+    var body: some View {
+        TimelineView(.animation) { context in
+            let time = context.date.timeIntervalSinceReferenceDate
+            HStack(alignment: .center, spacing: 4) {
+                ForEach(0..<24, id: \.self) { index in
+                    let wave = (sin(time * 6 + Double(index) * 0.72) + 1) / 2
+                    let height = isActive ? 10 + wave * 38 : 14
+                    Capsule()
+                        .fill(Color.accentColor)
+                        .frame(width: 4, height: height)
+                }
+            }
+            .frame(height: 52)
+        }
     }
 }
 

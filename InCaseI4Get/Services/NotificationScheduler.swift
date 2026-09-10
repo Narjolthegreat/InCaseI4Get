@@ -5,6 +5,10 @@ enum NotificationScheduler {
     static let reminderIDKey = "reminderID"
 
     static func ensureAuthorization() async -> Bool {
+        if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
+            return true
+        }
+
         let center = UNUserNotificationCenter.current()
         let settings = await center.notificationSettings()
 

@@ -9,6 +9,14 @@ private enum VoiceCapturePhase {
     case failed(String)
 }
 
+private struct VoiceReminderDraft: Identifiable {
+    let id = UUID()
+    let title: String
+    let fireDate: Date
+    let repeatRule: ReminderRepeat
+    let originalText: String
+}
+
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
@@ -20,6 +28,7 @@ struct HomeView: View {
     @State private var presentedReminder: ReminderItem?
     @State private var voicePhase: VoiceCapturePhase?
     @State private var voiceDismissTask: Task<Void, Never>?
+    @State private var pendingVoiceReminder: VoiceReminderDraft?
     @StateObject private var voiceRecorder = VoiceTranscriber()
 
     private var activeReminders: [ReminderItem] {
@@ -68,6 +77,15 @@ struct HomeView: View {
             }
             .sheet(isPresented: $isShowingSettings) {
                 SettingsView()
+            }
+            .sheet(item: $pendingVoiceReminder) { draft in
+                VoiceReminderConfirmationView(draft: draft) { title, fireDate in
+                    confirmVoiceReminder(
+                        draft,
+                        title: title,
+                        fireDate: fireDate
+                    )
+                }
             }
             .fullScreenCover(item: $presentedReminder) { reminder in
                 ReminderAlertView(
@@ -318,6 +336,31 @@ struct HomeView: View {
                 return
             }
 
+            voiceDismissTask?.cancel()
+            voicePhase = nil
+            pendingVoiceReminder = VoiceReminderDraft(
+                title: parsed.title,
+                fireDate: max(fireDate, Date().addingTimeInterval(60)),
+                repeatRule: parsed.repeatRule,
+                originalText: trimmed
+            )
+        }
+    }
+
+    private func handleVoiceFailure(_ message: String) {
+        Task { @MainActor in
+            showVoiceResult(.failed(message), duration: .seconds(2.5))
+        }
+    }
+
+    private func confirmVoiceReminder(
+        _ draft: VoiceReminderDraft,
+        title: String,
+        fireDate: Date
+    ) {
+        pendingVoiceReminder = nil
+
+        Task { @MainActor in
             let granted = await NotificationScheduler.ensureAuthorization()
             guard granted else {
                 showVoiceResult(
@@ -327,13 +370,22 @@ struct HomeView: View {
                 return
             }
 
-            let effectiveEndDate = parsed.repeatRule == .once
+            let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !cleanTitle.isEmpty else {
+                showVoiceResult(
+                    .failed("任务标题不能为空。"),
+                    duration: .seconds(2)
+                )
+                return
+            }
+
+            let effectiveEndDate = draft.repeatRule == .once
                 ? nil
-                : Calendar.current.date(byAdding: .day, value: 7, to: Date())
+                : Calendar.current.date(byAdding: .day, value: 7, to: fireDate)
             let item = ReminderItem(
-                title: parsed.title,
+                title: cleanTitle,
                 fireDate: fireDate,
-                repeatRule: parsed.repeatRule,
+                repeatRule: draft.repeatRule,
                 repeatEndDate: effectiveEndDate,
                 source: .voice,
                 languageCode: settings.language.rawValue,
@@ -345,15 +397,9 @@ struct HomeView: View {
             await NotificationScheduler.schedule(item)
 
             showVoiceResult(
-                .completed(title: parsed.title, fireDate: fireDate),
+                .completed(title: cleanTitle, fireDate: fireDate),
                 duration: .seconds(1.6)
             )
-        }
-    }
-
-    private func handleVoiceFailure(_ message: String) {
-        Task { @MainActor in
-            showVoiceResult(.failed(message), duration: .seconds(2.5))
         }
     }
 
@@ -372,6 +418,89 @@ struct HomeView: View {
     private struct AddFlow: Identifiable {
         let id = UUID()
         let source: ReminderSource
+    }
+}
+
+private struct VoiceReminderConfirmationView: View {
+    let draft: VoiceReminderDraft
+    let onConfirm: (String, Date) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var title: String
+    @State private var fireDate: Date
+
+    init(
+        draft: VoiceReminderDraft,
+        onConfirm: @escaping (String, Date) -> Void
+    ) {
+        self.draft = draft
+        self.onConfirm = onConfirm
+        _title = State(initialValue: draft.title)
+        _fireDate = State(initialValue: max(draft.fireDate, Date().addingTimeInterval(60)))
+    }
+
+    private var trimmedTitle: String {
+        title.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Reminder title", text: $title, axis: .vertical)
+                        .lineLimit(1...4)
+                        .accessibilityIdentifier("VoiceReminderTitleField")
+                } header: {
+                    Text("Task")
+                }
+
+                Section {
+                    DatePicker(
+                        "Remind at",
+                        selection: $fireDate,
+                        in: Date()...,
+                        displayedComponents: [.date, .hourAndMinute]
+                    )
+                    .accessibilityIdentifier("VoiceReminderDatePicker")
+
+                    if draft.repeatRule != .once {
+                        Label(
+                            draft.repeatRule.displayName,
+                            systemImage: "repeat"
+                        )
+                        .foregroundStyle(.secondary)
+                    }
+                } header: {
+                    Text("Reminder time")
+                }
+
+                Section {
+                    Text(draft.originalText)
+                        .foregroundStyle(.secondary)
+                } header: {
+                    Text("Recognized speech")
+                }
+            }
+            .navigationTitle("Confirm Reminder")
+            .navigationBarTitleDisplayMode(.inline)
+            .accessibilityIdentifier("VoiceReminderConfirmation")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Create") {
+                        onConfirm(trimmedTitle, fireDate)
+                        dismiss()
+                    }
+                    .disabled(trimmedTitle.isEmpty)
+                    .accessibilityIdentifier("ConfirmCreateReminderButton")
+                }
+            }
+        }
     }
 }
 

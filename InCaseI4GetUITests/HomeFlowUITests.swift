@@ -53,17 +53,24 @@ final class HomeFlowUITests: XCTestCase {
         keepScreenshot(named: "03-add-text")
     }
 
-    func test04VoiceHoldCreatesReminder() {
+    func test04VoiceHoldRequiresConfirmation() {
         let speakButton = app.buttons["HomeSpeakButton"]
         XCTAssertTrue(speakButton.waitForExistence(timeout: 5))
         speakButton.press(forDuration: 0.8)
 
         XCTAssertTrue(
-            app.otherElements["VoiceCaptureOverlay"].waitForExistence(timeout: 2),
-            "Voice capture overlay did not appear."
+            app.otherElements["VoiceReminderConfirmation"].waitForExistence(timeout: 5),
+            "Voice reminder confirmation did not appear."
         )
 
-        keepScreenshot(named: "04-voice-overlay")
+        keepScreenshot(named: "04-voice-confirmation")
+
+        XCTAssertFalse(
+            app.otherElements["ReminderRow"].exists,
+            "Reminder should not be created before confirmation."
+        )
+
+        app.buttons["ConfirmCreateReminderButton"].tap()
 
         XCTAssertTrue(
             app.otherElements["ReminderRow"].waitForExistence(timeout: 6),

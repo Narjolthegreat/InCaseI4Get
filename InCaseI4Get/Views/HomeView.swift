@@ -461,6 +461,7 @@ private struct ReminderConfirmationOverlay: View {
     @State private var repeatRule: ReminderRepeat
     @State private var selectedLockedRule: ReminderRepeat?
     @State private var showsPaywall = false
+    @FocusState private var isTitleFocused: Bool
 
     init(
         draft: ReminderDraft,
@@ -504,6 +505,7 @@ private struct ReminderConfirmationOverlay: View {
                             .foregroundStyle(.secondary)
                         TextField("Reminder title", text: $title, axis: .vertical)
                             .lineLimit(1...2)
+                            .focused($isTitleFocused)
                             .accessibilityIdentifier("VoiceReminderTitleField")
                     }
                     .padding(12)
@@ -606,6 +608,15 @@ private struct ReminderConfirmationOverlay: View {
             }
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("VoiceReminderConfirmation")
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        isTitleFocused = false
+                    }
+                    .accessibilityIdentifier("DismissReminderKeyboardButton")
+                }
+            }
         }
     }
 

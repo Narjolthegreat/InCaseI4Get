@@ -40,23 +40,35 @@ final class HomeFlowUITests: XCTestCase {
         keepScreenshot(named: "02-settings")
     }
 
-    func test03TypeUsesSharedConfirmationOverlay() {
+    func test03TypeFlowCreatesReminder() {
         launchApp()
 
         let typeButton = app.buttons["HomeTypeButton"]
         XCTAssertTrue(typeButton.waitForExistence(timeout: 5))
         typeButton.tap()
 
+        let titleField = app.textFields["VoiceReminderTitleField"]
         let confirmButton = app.buttons["ConfirmCreateReminderButton"]
         XCTAssertTrue(
             confirmButton.waitForExistence(timeout: 5),
             "Manual reminder confirmation did not appear."
         )
         XCTAssertTrue(app.buttons["CancelVoiceReminderButton"].exists)
-        XCTAssertTrue(app.textFields["VoiceReminderTitleField"].exists)
+        XCTAssertTrue(titleField.exists)
         XCTAssertFalse(confirmButton.isEnabled)
 
         keepScreenshot(named: "03-manual-entry")
+
+        titleField.tap()
+        titleField.typeText("Buy milk")
+        dismissKeyboardIfNeeded()
+        XCTAssertTrue(confirmButton.isEnabled)
+        confirmButton.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["Buy milk"].waitForExistence(timeout: 6),
+            "Manual reminder was not created."
+        )
     }
 
     func test04VoiceFlowScreenshotsAndConfirmation() {
@@ -102,6 +114,10 @@ final class HomeFlowUITests: XCTestCase {
             app.otherElements["ReminderRow"].waitForExistence(timeout: 6),
             "Voice reminder was not created."
         )
+        XCTAssertTrue(
+            app.staticTexts["Take medicine"].exists,
+            "Voice reminder title was not preserved."
+        )
     }
 
     func test05ProUserCanChooseRepeatRule() {
@@ -133,6 +149,14 @@ final class HomeFlowUITests: XCTestCase {
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+
+    private func dismissKeyboardIfNeeded() {
+        guard app.keyboards.count > 0 else { return }
+
+        let dismissButton = app.buttons["DismissReminderKeyboardButton"]
+        XCTAssertTrue(dismissButton.waitForExistence(timeout: 2))
+        dismissButton.tap()
     }
 
     private func launchApp(arguments: [String] = []) {

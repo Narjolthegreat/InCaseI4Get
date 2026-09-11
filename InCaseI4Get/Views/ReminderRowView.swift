@@ -20,6 +20,7 @@ enum ReminderUrgencyScale {
 struct ReminderRowView: View {
     let reminder: ReminderItem
     let now: Date
+    let onTap: () -> Void
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
@@ -64,7 +65,9 @@ struct ReminderRowView: View {
         }
         .padding(.vertical, 5)
         .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
         .accessibilityElement(children: .contain)
+        .accessibilityHint("Opens edit and delete actions")
         .accessibilityIdentifier("ReminderRow")
     }
 }

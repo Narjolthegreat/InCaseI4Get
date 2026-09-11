@@ -7,6 +7,7 @@ private enum VoiceCapturePhase {
     case processing
     case summarizing(title: String, fireDate: Date)
     case completed(title: String, fireDate: Date)
+    case updated(title: String, fireDate: Date)
     case failed(String)
 }
 
@@ -29,6 +30,8 @@ struct HomeView: View {
     @State private var voicePhase: VoiceCapturePhase?
     @State private var voiceDismissTask: Task<Void, Never>?
     @State private var pendingReminderDraft: ReminderDraft?
+    @State private var reminderActionTarget: ReminderItem?
+    @State private var reminderBeingEdited: ReminderItem?
     @StateObject private var voiceRecorder = VoiceTranscriber()
     @StateObject private var purchaseManager = PurchaseManager()
 
@@ -104,6 +107,7 @@ struct HomeView: View {
                     ReminderConfirmationOverlay(
                         draft: pendingReminderDraft,
                         purchaseManager: purchaseManager,
+                        mode: .create,
                         onCancel: {
                             self.pendingReminderDraft = nil
                         },
@@ -117,6 +121,51 @@ struct HomeView: View {
                         }
                     )
                     .id(pendingReminderDraft.id)
+                    .transition(.opacity)
+                }
+            }
+            .overlay {
+                if let reminderActionTarget {
+                    ReminderActionPrompt(
+                        onEdit: {
+                            self.reminderActionTarget = nil
+                            reminderBeingEdited = reminderActionTarget
+                        },
+                        onDelete: {
+                            self.reminderActionTarget = nil
+                            deleteReminder(reminderActionTarget)
+                        },
+                        onDismiss: {
+                            self.reminderActionTarget = nil
+                        }
+                    )
+                    .transition(.opacity)
+                }
+            }
+            .overlay {
+                if let reminderBeingEdited {
+                    ReminderConfirmationOverlay(
+                        draft: ReminderDraft(
+                            title: reminderBeingEdited.title,
+                            fireDate: reminderBeingEdited.fireDate,
+                            repeatRule: reminderBeingEdited.repeatRule,
+                            source: reminderBeingEdited.source
+                        ),
+                        purchaseManager: purchaseManager,
+                        mode: .edit,
+                        onCancel: {
+                            self.reminderBeingEdited = nil
+                        },
+                        onConfirm: { title, fireDate, repeatRule in
+                            updateReminder(
+                                reminderBeingEdited,
+                                title: title,
+                                fireDate: fireDate,
+                                repeatRule: repeatRule
+                            )
+                        }
+                    )
+                    .id(reminderBeingEdited.id)
                     .transition(.opacity)
                 }
             }
@@ -171,19 +220,8 @@ struct HomeView: View {
 
     private func rows(for items: [ReminderItem], now: Date) -> some View {
         ForEach(items) { item in
-            ReminderRowView(reminder: item, now: now)
-            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                Button(role: .destructive) {
-                    deleteReminder(item)
-                } label: {
-                    Label("Delete", systemImage: "trash")
-                }
-                Button {
-                    completeCurrentReminder(id: item.id)
-                } label: {
-                    Label("Done", systemImage: "checkmark")
-                }
-                .tint(.green)
+            ReminderRowView(reminder: item, now: now) {
+                reminderActionTarget = item
             }
         }
     }
@@ -306,6 +344,41 @@ struct HomeView: View {
             await NotificationScheduler.cancel(item)
             modelContext.delete(item)
             try? modelContext.save()
+        }
+    }
+
+    private func updateReminder(
+        _ item: ReminderItem,
+        title: String,
+        fireDate: Date,
+        repeatRule: ReminderRepeat
+    ) {
+        reminderBeingEdited = nil
+
+        Task { @MainActor in
+            let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !cleanTitle.isEmpty else {
+                showVoiceResult(
+                    .failed("任务标题不能为空。"),
+                    duration: .seconds(2)
+                )
+                return
+            }
+
+            await NotificationScheduler.cancel(item)
+            item.title = cleanTitle
+            item.fireDate = fireDate
+            item.repeatRule = repeatRule
+            item.repeatEndDate = repeatRule == .once
+                ? nil
+                : Calendar.current.date(byAdding: .day, value: 7, to: fireDate)
+            try? modelContext.save()
+            await NotificationScheduler.schedule(item)
+
+            showVoiceResult(
+                .updated(title: cleanTitle, fireDate: fireDate),
+                duration: .seconds(1.6)
+            )
         }
     }
 
@@ -451,8 +524,32 @@ struct HomeView: View {
 }
 
 private struct ReminderConfirmationOverlay: View {
+    enum Mode {
+        case create
+        case edit
+
+        var actionTitle: String {
+            switch self {
+            case .create:
+                "Create"
+            case .edit:
+                "Save"
+            }
+        }
+
+        var accessibilityIdentifier: String {
+            switch self {
+            case .create:
+                "ConfirmCreateReminderButton"
+            case .edit:
+                "SaveEditedReminderButton"
+            }
+        }
+    }
+
     let draft: ReminderDraft
     @ObservedObject var purchaseManager: PurchaseManager
+    let mode: Mode
     let onCancel: () -> Void
     let onConfirm: (String, Date, ReminderRepeat) -> Void
 
@@ -466,11 +563,13 @@ private struct ReminderConfirmationOverlay: View {
     init(
         draft: ReminderDraft,
         purchaseManager: PurchaseManager,
+        mode: Mode,
         onCancel: @escaping () -> Void,
         onConfirm: @escaping (String, Date, ReminderRepeat) -> Void
     ) {
         self.draft = draft
         self.purchaseManager = purchaseManager
+        self.mode = mode
         self.onCancel = onCancel
         self.onConfirm = onConfirm
         _title = State(initialValue: draft.title)
@@ -562,7 +661,7 @@ private struct ReminderConfirmationOverlay: View {
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("CancelVoiceReminderButton")
 
-                        Button("Create") {
+                        Button(mode.actionTitle) {
                             onConfirm(trimmedTitle, fireDate, repeatRule)
                         }
                         .font(.headline.bold())
@@ -575,7 +674,7 @@ private struct ReminderConfirmationOverlay: View {
                         .buttonStyle(.plain)
                         .disabled(!canCreate)
                         .opacity(canCreate ? 1 : 0.5)
-                        .accessibilityIdentifier("ConfirmCreateReminderButton")
+                        .accessibilityIdentifier(mode.accessibilityIdentifier)
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -801,6 +900,8 @@ private struct VoiceCaptureOverlay: View {
             "正在概括任务"
         case .completed:
             "已创建提醒"
+        case .updated:
+            "已保存修改"
         case .failed:
             "没有完成"
         }
@@ -816,9 +917,60 @@ private struct VoiceCaptureOverlay: View {
             "\(title) · \(fireDate.formatted(date: .abbreviated, time: .shortened))"
         case .completed(let title, let fireDate):
             "\(title) · \(fireDate.formatted(date: .abbreviated, time: .shortened))"
+        case .updated(let title, let fireDate):
+            "\(title) · \(fireDate.formatted(date: .abbreviated, time: .shortened))"
         case .failed(let message):
             message
         }
+    }
+}
+
+private struct ReminderActionPrompt: View {
+    let onEdit: () -> Void
+    let onDelete: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.32)
+                .ignoresSafeArea()
+                .onTapGesture(perform: onDismiss)
+
+            HStack(spacing: 10) {
+                Button(action: onEdit) {
+                    Text("重编辑")
+                        .font(.title3.bold())
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("EditReminderActionButton")
+
+                Text("or")
+                    .font(.title3.weight(.medium))
+                    .foregroundStyle(.secondary)
+
+                Button(role: .destructive, action: onDelete) {
+                    Text("删除")
+                        .font(.title3.bold())
+                        .foregroundStyle(.red)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("DeleteReminderActionButton")
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .frame(minWidth: 220)
+            .background(
+                .regularMaterial,
+                in: RoundedRectangle(cornerRadius: 8)
+            )
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("ReminderActionPrompt")
     }
 }
 

@@ -147,6 +147,60 @@ final class HomeFlowUITests: XCTestCase {
         )
     }
 
+    func test06TapReminderCanEditAndDelete() {
+        launchApp()
+
+        app.buttons["HomeTypeButton"].tap()
+
+        let titleField = app.textFields["VoiceReminderTitleField"]
+        XCTAssertTrue(titleField.waitForExistence(timeout: 5))
+        titleField.tap()
+        titleField.typeText("Call mom")
+        dismissKeyboardIfNeeded()
+
+        let createButton = app.buttons["ConfirmCreateReminderButton"]
+        XCTAssertTrue(createButton.isEnabled)
+        createButton.tap()
+
+        let row = app.otherElements["ReminderRow"].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 6))
+        waitForDisappearance(app.staticTexts["已创建提醒"], timeout: 4)
+
+        row.tap()
+
+        let editButton = app.buttons["EditReminderActionButton"]
+        XCTAssertTrue(editButton.waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["or"].exists)
+        XCTAssertTrue(app.buttons["DeleteReminderActionButton"].exists)
+        keepScreenshot(named: "11-reminder-actions")
+
+        editButton.tap()
+
+        let editTitleField = app.textFields["VoiceReminderTitleField"]
+        XCTAssertTrue(editTitleField.waitForExistence(timeout: 3))
+        XCTAssertEqual(editTitleField.value as? String, "Call mom")
+        editTitleField.tap()
+        editTitleField.typeText(" tomorrow")
+        dismissKeyboardIfNeeded()
+
+        let saveButton = app.buttons["SaveEditedReminderButton"]
+        XCTAssertTrue(saveButton.isEnabled)
+        saveButton.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["Call mom tomorrow"].waitForExistence(timeout: 6),
+            "Edited reminder title was not saved."
+        )
+        waitForDisappearance(app.staticTexts["已保存修改"], timeout: 4)
+
+        app.otherElements["ReminderRow"].firstMatch.tap()
+        let deleteButton = app.buttons["DeleteReminderActionButton"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 3))
+        deleteButton.tap()
+
+        waitForDisappearance(app.otherElements["ReminderRow"].firstMatch, timeout: 4)
+    }
+
     private func keepScreenshot(named name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name
@@ -160,6 +214,20 @@ final class HomeFlowUITests: XCTestCase {
         let dismissButton = app.buttons["DismissReminderKeyboardButton"]
         XCTAssertTrue(dismissButton.waitForExistence(timeout: 2))
         dismissButton.tap()
+    }
+
+    private func waitForDisappearance(
+        _ element: XCUIElement,
+        timeout: TimeInterval
+    ) {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == false"),
+            object: element
+        )
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [expectation], timeout: timeout),
+            .completed
+        )
     }
 
     private func launchApp(arguments: [String] = []) {

@@ -10,6 +10,10 @@ enum ReminderVoiceKind: String {
 enum ReminderVoiceStore {
     @MainActor
     static func prepareSounds(for item: ReminderItem) async -> Bool {
+        if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
+            return true
+        }
+
         let language = AppLanguage.current
         let timeText = timeText(for: item.fireDate, language: language)
         let title = spokenTitle(from: item.title)
@@ -53,6 +57,10 @@ enum ReminderVoiceStore {
         for item: ReminderItem,
         at date: Date
     ) async -> String? {
+        if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
+            return nil
+        }
+
         let language = AppLanguage.current
         let text = language.format(
             .alertSpeech,

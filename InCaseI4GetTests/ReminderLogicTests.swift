@@ -22,6 +22,15 @@ final class ReminderLogicTests: XCTestCase {
         XCTAssertTrue(result.title.localizedCaseInsensitiveContains("trash"))
     }
 
+    func testSentenceParserRemovesPrepositionBeforeDate() {
+        let result = ReminderSentenceParser.parse(
+            "Take medicine on January 1, 2030 at 8:00 PM"
+        )
+
+        XCTAssertEqual(result.title, "Take medicine")
+        XCTAssertNotNil(result.fireDate)
+    }
+
     func testDailyReminderAdvancesToNextDay() {
         let start = makeDate(year: 2026, month: 1, day: 1, hour: 9, minute: 0)
         let now = makeDate(year: 2026, month: 1, day: 1, hour: 9, minute: 1)

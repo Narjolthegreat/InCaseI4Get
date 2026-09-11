@@ -271,14 +271,33 @@ struct ReminderSentenceParser {
             if let range = dateResult.range,
                range.location != NSNotFound,
                NSMaxRange(range) <= mutable.length {
-                mutable = mutable.replacingCharacters(in: range, with: " ") as NSString
+                var removalRange = range
+                let prefixRange = NSRange(location: 0, length: range.location)
+                let prefix = mutable.substring(with: prefixRange) as NSString
+                let prepositionRange = prefix.range(
+                    of: #"\b(?:on|at|by)\s+$"#,
+                    options: [.regularExpression, .caseInsensitive]
+                )
+
+                if prepositionRange.location != NSNotFound {
+                    removalRange = NSRange(
+                        location: prepositionRange.location,
+                        length: NSMaxRange(range) - prepositionRange.location
+                    )
+                }
+
+                mutable = mutable.replacingCharacters(in: removalRange, with: " ") as NSString
             }
         }
 
         var title = mutable as String
         title = title
             .replacingOccurrences(of: " at ", with: " ")
-            .replacingOccurrences(of: "  ", with: " ")
+            .replacingOccurrences(
+                of: #"\s+"#,
+                with: " ",
+                options: .regularExpression
+            )
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
         if title.isEmpty {

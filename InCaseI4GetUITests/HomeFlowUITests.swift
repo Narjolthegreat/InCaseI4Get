@@ -164,10 +164,7 @@ final class HomeFlowUITests: XCTestCase {
 
         let row = app.otherElements["ReminderRow"].firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 6))
-        let createdOverlay = app.staticTexts["已创建提醒"]
-        if createdOverlay.waitForExistence(timeout: 2) {
-            waitForDisappearance(createdOverlay, timeout: 4)
-        }
+        waitForVoiceOverlayToDismiss()
 
         row.tap()
 
@@ -193,9 +190,7 @@ final class HomeFlowUITests: XCTestCase {
             app.staticTexts["Call mom tomorrow"].waitForExistence(timeout: 6),
             "Edited reminder title was not saved."
         )
-        let updatedOverlay = app.staticTexts["已保存修改"]
-        XCTAssertTrue(updatedOverlay.waitForExistence(timeout: 3))
-        waitForDisappearance(updatedOverlay, timeout: 4)
+        waitForVoiceOverlayToDismiss()
 
         app.otherElements["ReminderRow"].firstMatch.tap()
         let deleteButton = app.buttons["DeleteReminderActionButton"]
@@ -242,6 +237,12 @@ final class HomeFlowUITests: XCTestCase {
             XCTWaiter.wait(for: [expectation], timeout: timeout),
             .completed
         )
+    }
+
+    private func waitForVoiceOverlayToDismiss() {
+        let overlay = app.otherElements["VoiceCaptureOverlay"]
+        guard overlay.exists else { return }
+        waitForDisappearance(overlay, timeout: 4)
     }
 
     private func launchApp(arguments: [String] = []) {

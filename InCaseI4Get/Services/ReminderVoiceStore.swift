@@ -176,7 +176,7 @@ private final class SpeechRenderSession {
             return false
         }
 
-        await withCheckedContinuation { continuation in
+        return await withCheckedContinuation { continuation in
             self.continuation = continuation
 
             let utterance = AVSpeechUtterance(string: text)

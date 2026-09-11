@@ -1,3 +1,4 @@
+import AVFoundation
 import XCTest
 @testable import InCaseI4Get
 
@@ -147,6 +148,47 @@ final class ReminderLogicTests: XCTestCase {
             ReminderVoiceStore.soundName(for: id, kind: .early),
             "reminder-11111111-1111-1111-1111-111111111111-early.caf"
         )
+    }
+
+    func testReminderVoiceRendersAudioFile() async throws {
+        guard ProcessInfo.processInfo.environment["RUN_VOICE_RENDER_TEST"] == "1" else {
+            throw XCTSkip("Voice rendering probe is disabled.")
+        }
+        guard AVSpeechSynthesisVoice(
+            language: AppLanguage.english.speechLocale
+        ) != nil else {
+            throw XCTSkip("CI runner has no usable English TTS voice.")
+        }
+
+        let id = UUID()
+        let item = ReminderItem(
+            id: id,
+            title: "Take medicine",
+            fireDate: Date().addingTimeInterval(60 * 60),
+            repeatRule: .daily,
+            source: .text,
+            languageCode: AppLanguage.english.rawValue,
+            earlyMinutes: 0,
+            strikeEnabled: false
+        )
+        defer {
+            ReminderVoiceStore.removeSounds(for: id)
+        }
+
+        let rendered = await ReminderVoiceStore.prepareSounds(for: item)
+        let soundURL = ReminderVoiceStore.soundURL(for: id, kind: .main)
+
+        XCTAssertTrue(rendered)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: soundURL.path))
+
+        let attributes = try FileManager.default.attributesOfItem(
+            atPath: soundURL.path
+        )
+        let fileSize = (attributes[.size] as? NSNumber)?.intValue ?? 0
+        XCTAssertGreaterThan(fileSize, 0)
+
+        let audioFile = try AVAudioFile(forReading: soundURL)
+        XCTAssertGreaterThan(audioFile.length, 0)
     }
 
     private func makeReminder(

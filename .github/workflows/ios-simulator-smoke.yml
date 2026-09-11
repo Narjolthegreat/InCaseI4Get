@@ -53,7 +53,7 @@ jobs:
 
       - name: Run unit and UI tests
         run: |
-          xcodebuild test \
+          RUN_VOICE_RENDER_TEST=1 xcodebuild test \
             -project InCaseI4Get.xcodeproj \
             -scheme InCaseI4Get \
             -configuration Debug \

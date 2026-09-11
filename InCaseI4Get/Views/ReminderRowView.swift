@@ -20,22 +20,13 @@ enum ReminderUrgencyScale {
 struct ReminderRowView: View {
     let reminder: ReminderItem
     let now: Date
-    let onComplete: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            Button(action: onComplete) {
-                Image(systemName: "circle")
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
-            }
-            .buttonStyle(.plain)
-            .frame(width: 32, height: 32)
-            .accessibilityLabel("Mark as done")
-
+        HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(reminder.title)
                     .font(.body)
+                    .fixedSize(horizontal: false, vertical: true)
                 if !reminder.note.isEmpty {
                     Text(reminder.note)
                         .font(.caption)
@@ -55,20 +46,23 @@ struct ReminderRowView: View {
                     }
                 }
             }
+            .layoutPriority(1)
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 12)
 
             Text(reminder.fireDate, format: .dateTime.month().day().hour().minute())
                 .font(.caption)
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
+                .multilineTextAlignment(.trailing)
+                .fixedSize(horizontal: true, vertical: false)
 
             ReminderUrgencySphere(
                 fireDate: reminder.fireDate,
                 referenceDate: now
             )
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 5)
         .contentShape(Rectangle())
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("ReminderRow")

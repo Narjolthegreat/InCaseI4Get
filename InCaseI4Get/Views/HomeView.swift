@@ -171,9 +171,7 @@ struct HomeView: View {
 
     private func rows(for items: [ReminderItem], now: Date) -> some View {
         ForEach(items) { item in
-            ReminderRowView(reminder: item, now: now) {
-                completeCurrentReminder(id: item.id)
-            }
+            ReminderRowView(reminder: item, now: now)
             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                 Button(role: .destructive) {
                     deleteReminder(item)

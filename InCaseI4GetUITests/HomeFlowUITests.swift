@@ -164,7 +164,10 @@ final class HomeFlowUITests: XCTestCase {
 
         let row = app.otherElements["ReminderRow"].firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 6))
-        waitForDisappearance(app.staticTexts["已创建提醒"], timeout: 4)
+        let createdOverlay = app.staticTexts["已创建提醒"]
+        if createdOverlay.waitForExistence(timeout: 2) {
+            waitForDisappearance(createdOverlay, timeout: 4)
+        }
 
         row.tap()
 
@@ -179,8 +182,7 @@ final class HomeFlowUITests: XCTestCase {
         let editTitleField = app.textFields["VoiceReminderTitleField"]
         XCTAssertTrue(editTitleField.waitForExistence(timeout: 3))
         XCTAssertEqual(editTitleField.value as? String, "Call mom")
-        editTitleField.tap()
-        editTitleField.typeText(" tomorrow")
+        replaceText(in: editTitleField, with: "Call mom tomorrow")
         dismissKeyboardIfNeeded()
 
         let saveButton = app.buttons["SaveEditedReminderButton"]
@@ -191,7 +193,9 @@ final class HomeFlowUITests: XCTestCase {
             app.staticTexts["Call mom tomorrow"].waitForExistence(timeout: 6),
             "Edited reminder title was not saved."
         )
-        waitForDisappearance(app.staticTexts["已保存修改"], timeout: 4)
+        let updatedOverlay = app.staticTexts["已保存修改"]
+        XCTAssertTrue(updatedOverlay.waitForExistence(timeout: 3))
+        waitForDisappearance(updatedOverlay, timeout: 4)
 
         app.otherElements["ReminderRow"].firstMatch.tap()
         let deleteButton = app.buttons["DeleteReminderActionButton"]
@@ -214,6 +218,16 @@ final class HomeFlowUITests: XCTestCase {
         let dismissButton = app.buttons["DismissReminderKeyboardButton"]
         XCTAssertTrue(dismissButton.waitForExistence(timeout: 2))
         dismissButton.tap()
+    }
+
+    private func replaceText(in element: XCUIElement, with text: String) {
+        element.tap()
+        element.press(forDuration: 1.0)
+
+        let selectAll = app.menuItems["Select All"]
+        XCTAssertTrue(selectAll.waitForExistence(timeout: 2))
+        selectAll.tap()
+        element.typeText(text)
     }
 
     private func waitForDisappearance(

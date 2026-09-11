@@ -146,30 +146,32 @@ struct HomeView: View {
     }
 
     private var reminderList: some View {
-        List {
-            Section("Today") {
-                if todayReminders.isEmpty {
-                    Text("Nothing today")
-                        .foregroundStyle(.secondary)
-                } else {
-                    rows(for: todayReminders)
+        TimelineView(.periodic(from: .now, by: 60)) { context in
+            List {
+                Section("Today") {
+                    if todayReminders.isEmpty {
+                        Text("Nothing today")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        rows(for: todayReminders, now: context.date)
+                    }
+                }
+                Section("Upcoming") {
+                    if upcomingReminders.isEmpty {
+                        Text("Nothing later")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        rows(for: upcomingReminders, now: context.date)
+                    }
                 }
             }
-            Section("Upcoming") {
-                if upcomingReminders.isEmpty {
-                    Text("Nothing later")
-                        .foregroundStyle(.secondary)
-                } else {
-                    rows(for: upcomingReminders)
-                }
-            }
+            .listStyle(.insetGrouped)
         }
-        .listStyle(.insetGrouped)
     }
 
-    private func rows(for items: [ReminderItem]) -> some View {
+    private func rows(for items: [ReminderItem], now: Date) -> some View {
         ForEach(items) { item in
-            ReminderRowView(reminder: item) {
+            ReminderRowView(reminder: item, now: now) {
                 completeCurrentReminder(id: item.id)
             }
             .swipeActions(edge: .trailing, allowsFullSwipe: true) {

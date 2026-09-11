@@ -69,6 +69,30 @@ final class ReminderLogicTests: XCTestCase {
         XCTAssertTrue(item.shouldBeRemoved(at: nextDay, calendar: calendar))
     }
 
+    func testReminderUrgencyMovesFromRedToGreen() {
+        let now = makeDate(year: 2026, month: 1, day: 1, hour: 9, minute: 0)
+        let imminent = now.addingTimeInterval(60)
+        let distant = now.addingTimeInterval(ReminderUrgencyScale.horizon)
+
+        XCTAssertEqual(
+            ReminderUrgencyScale.hue(fireDate: imminent, relativeTo: now),
+            0,
+            accuracy: 0.01
+        )
+        XCTAssertEqual(
+            ReminderUrgencyScale.hue(fireDate: distant, relativeTo: now),
+            0.33,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            ReminderUrgencyScale.progress(
+                fireDate: now.addingTimeInterval(-60),
+                relativeTo: now
+            ),
+            0
+        )
+    }
+
     private func makeReminder(
         fireDate: Date,
         repeatRule: ReminderRepeat

@@ -146,6 +146,7 @@ enum L10n {
         case addPreviewSentence
 
         case notificationEarlyBody
+        case notificationEarlySpeech
     }
 
     static func text(_ key: Key, language: AppLanguage) -> String {
@@ -244,7 +245,7 @@ enum L10n {
         .alertGotIt: "Got it",
         .alertSnooze: "Snooze 10 min",
         .alertSnoozeAction: "10 min later",
-        .alertSpeech: "It's time. %@. Don't forget.",
+        .alertSpeech: "It's %1$@. %2$@. Don't forget.",
         .paywallTitle: "Unlock Repeating Reminders",
         .paywallDescription: "Pay once and keep daily, weekly and monthly reminders forever.",
         .paywallRestore: "Restore Purchase",
@@ -297,7 +298,8 @@ enum L10n {
         .addStopRecording: "Stop recording",
         .addStartVoiceInput: "Start voice input",
         .addPreviewSentence: "This is a reminder preview.",
-        .notificationEarlyBody: "%@ (in %d min)"
+        .notificationEarlyBody: "%@ (in %d min)",
+        .notificationEarlySpeech: "Your reminder is at %1$@, in %2$d minutes. %3$@."
     ]
 
     private static let chinese: [Key: String] = [
@@ -361,7 +363,7 @@ enum L10n {
         .alertGotIt: "收到",
         .alertSnooze: "10 分钟后再提醒",
         .alertSnoozeAction: "10 分钟后",
-        .alertSpeech: "到时间了。%@。别忘了。",
+        .alertSpeech: "现在是%1$@。%2$@。别忘了。",
         .paywallTitle: "解锁重复提醒",
         .paywallDescription: "一次购买，永久使用每日、每周和每月重复提醒。",
         .paywallRestore: "恢复购买",
@@ -414,7 +416,8 @@ enum L10n {
         .addStopRecording: "停止录音",
         .addStartVoiceInput: "开始语音输入",
         .addPreviewSentence: "这是一条提醒预览。",
-        .notificationEarlyBody: "%@（%d 分钟后）"
+        .notificationEarlyBody: "%@（%d 分钟后）",
+        .notificationEarlySpeech: "提醒时间是%1$@，还有%2$d分钟。%3$@。"
     ]
 
     private static let japanese: [Key: String] = [
@@ -478,7 +481,7 @@ enum L10n {
         .alertGotIt: "了解",
         .alertSnooze: "10分後に再通知",
         .alertSnoozeAction: "10分後",
-        .alertSpeech: "時間です。%@。忘れないでください。",
+        .alertSpeech: "%1$@です。%2$@。忘れないでください。",
         .paywallTitle: "繰り返しリマインダーを解除",
         .paywallDescription: "一度の購入で、毎日・毎週・毎月のリマインダーを永久に使えます。",
         .paywallRestore: "購入を復元",
@@ -531,7 +534,8 @@ enum L10n {
         .addStopRecording: "録音を停止",
         .addStartVoiceInput: "音声入力を開始",
         .addPreviewSentence: "これはリマインダーのプレビューです。",
-        .notificationEarlyBody: "%@（%d分後）"
+        .notificationEarlyBody: "%@（%d分後）",
+        .notificationEarlySpeech: "リマインダーは%1$@、%2$d分後です。%3$@。"
     ]
 
     private static let korean: [Key: String] = [
@@ -595,7 +599,7 @@ enum L10n {
         .alertGotIt: "확인",
         .alertSnooze: "10분 후 다시 알림",
         .alertSnoozeAction: "10분 후",
-        .alertSpeech: "시간입니다. %@. 잊지 마세요.",
+        .alertSpeech: "%1$@입니다. %2$@. 잊지 마세요.",
         .paywallTitle: "반복 알림 잠금 해제",
         .paywallDescription: "한 번 결제하면 매일, 매주, 매월 반복 알림을 계속 사용할 수 있습니다.",
         .paywallRestore: "구매 복원",
@@ -648,7 +652,8 @@ enum L10n {
         .addStopRecording: "녹음 중지",
         .addStartVoiceInput: "음성 입력 시작",
         .addPreviewSentence: "이것은 알림 미리보기입니다.",
-        .notificationEarlyBody: "%@(%d분 후)"
+        .notificationEarlyBody: "%@(%d분 후)",
+        .notificationEarlySpeech: "알림은 %1$@, %2$d분 후입니다. %3$@."
     ]
 
     private static let french: [Key: String] = [
@@ -712,7 +717,7 @@ enum L10n {
         .alertGotIt: "Compris",
         .alertSnooze: "Rappeler dans 10 min",
         .alertSnoozeAction: "Dans 10 min",
-        .alertSpeech: "C'est l'heure. %@. N'oubliez pas.",
+        .alertSpeech: "Il est %1$@. %2$@. N'oubliez pas.",
         .paywallTitle: "Débloquer les rappels répétés",
         .paywallDescription: "Payez une fois et gardez les rappels quotidiens, hebdomadaires et mensuels pour toujours.",
         .paywallRestore: "Restaurer l'achat",
@@ -765,7 +770,8 @@ enum L10n {
         .addStopRecording: "Arrêter l'enregistrement",
         .addStartVoiceInput: "Démarrer la saisie vocale",
         .addPreviewSentence: "Ceci est un aperçu du rappel.",
-        .notificationEarlyBody: "%@ (dans %d min)"
+        .notificationEarlyBody: "%@ (dans %d min)",
+        .notificationEarlySpeech: "Votre rappel est à %1$@, dans %2$d minutes. %3$@."
     ]
 
     private static let german: [Key: String] = [
@@ -829,7 +835,7 @@ enum L10n {
         .alertGotIt: "Verstanden",
         .alertSnooze: "In 10 Min. erneut",
         .alertSnoozeAction: "In 10 Min.",
-        .alertSpeech: "Es ist Zeit. %@. Nicht vergessen.",
+        .alertSpeech: "Es ist %1$@. %2$@. Nicht vergessen.",
         .paywallTitle: "Wiederkehrende Erinnerungen freischalten",
         .paywallDescription: "Einmal zahlen und tägliche, wöchentliche und monatliche Erinnerungen dauerhaft nutzen.",
         .paywallRestore: "Kauf wiederherstellen",
@@ -882,7 +888,8 @@ enum L10n {
         .addStopRecording: "Aufnahme stoppen",
         .addStartVoiceInput: "Spracheingabe starten",
         .addPreviewSentence: "Dies ist eine Vorschau der Erinnerung.",
-        .notificationEarlyBody: "%@ (in %d Min.)"
+        .notificationEarlyBody: "%@ (in %d Min.)",
+        .notificationEarlySpeech: "Deine Erinnerung ist um %1$@, in %2$d Minuten. %3$@."
     ]
 
     private static let turkish: [Key: String] = [
@@ -946,7 +953,7 @@ enum L10n {
         .alertGotIt: "Anladım",
         .alertSnooze: "10 dk sonra",
         .alertSnoozeAction: "10 dk sonra",
-        .alertSpeech: "Zamanı geldi. %@. Unutma.",
+        .alertSpeech: "Saat %1$@. %2$@. Unutma.",
         .paywallTitle: "Tekrarlanan hatırlatmaların kilidini aç",
         .paywallDescription: "Bir kez öde, günlük, haftalık ve aylık hatırlatmaları kalıcı olarak kullan.",
         .paywallRestore: "Satın alımı geri yükle",
@@ -999,7 +1006,8 @@ enum L10n {
         .addStopRecording: "Kaydı durdur",
         .addStartVoiceInput: "Sesli girişi başlat",
         .addPreviewSentence: "Bu bir hatırlatma önizlemesidir.",
-        .notificationEarlyBody: "%@ (%d dk içinde)"
+        .notificationEarlyBody: "%@ (%d dk içinde)",
+        .notificationEarlySpeech: "Hatırlatman %1$@, %2$d dakika içinde. %3$@."
     ]
 
     private static let spanish: [Key: String] = [
@@ -1063,7 +1071,7 @@ enum L10n {
         .alertGotIt: "Entendido",
         .alertSnooze: "Posponer 10 min",
         .alertSnoozeAction: "En 10 min",
-        .alertSpeech: "Es la hora. %@. No lo olvides.",
+        .alertSpeech: "Son las %1$@. %2$@. No lo olvides.",
         .paywallTitle: "Desbloquear recordatorios repetidos",
         .paywallDescription: "Paga una vez y conserva para siempre los recordatorios diarios, semanales y mensuales.",
         .paywallRestore: "Restaurar compra",
@@ -1116,7 +1124,8 @@ enum L10n {
         .addStopRecording: "Detener grabación",
         .addStartVoiceInput: "Iniciar entrada de voz",
         .addPreviewSentence: "Esta es una vista previa del recordatorio.",
-        .notificationEarlyBody: "%@ (en %d min)"
+        .notificationEarlyBody: "%@ (en %d min)",
+        .notificationEarlySpeech: "Tu recordatorio es a las %1$@, en %2$d minutos. %3$@."
     ]
 
     private static let portuguese: [Key: String] = [
@@ -1180,7 +1189,7 @@ enum L10n {
         .alertGotIt: "Entendi",
         .alertSnooze: "Adiar 10 min",
         .alertSnoozeAction: "Em 10 min",
-        .alertSpeech: "Está na hora. %@. Não esqueça.",
+        .alertSpeech: "São %1$@. %2$@. Não esqueça.",
         .paywallTitle: "Desbloquear lembretes repetidos",
         .paywallDescription: "Pague uma vez e mantenha lembretes diários, semanais e mensais para sempre.",
         .paywallRestore: "Restaurar compra",
@@ -1233,7 +1242,8 @@ enum L10n {
         .addStopRecording: "Parar gravação",
         .addStartVoiceInput: "Iniciar entrada de voz",
         .addPreviewSentence: "Esta é uma prévia do lembrete.",
-        .notificationEarlyBody: "%@ (em %d min)"
+        .notificationEarlyBody: "%@ (em %d min)",
+        .notificationEarlySpeech: "Seu lembrete é às %1$@, em %2$d minutos. %3$@."
     ]
 
     private static let russian: [Key: String] = [
@@ -1297,7 +1307,7 @@ enum L10n {
         .alertGotIt: "Понятно",
         .alertSnooze: "Через 10 мин",
         .alertSnoozeAction: "Через 10 мин",
-        .alertSpeech: "Время пришло. %@. Не забудьте.",
+        .alertSpeech: "Сейчас %1$@. %2$@. Не забудьте.",
         .paywallTitle: "Открыть повторяющиеся напоминания",
         .paywallDescription: "Оплатите один раз и пользуйтесь ежедневными, еженедельными и ежемесячными напоминаниями навсегда.",
         .paywallRestore: "Восстановить покупку",
@@ -1350,6 +1360,7 @@ enum L10n {
         .addStopRecording: "Остановить запись",
         .addStartVoiceInput: "Начать голосовой ввод",
         .addPreviewSentence: "Это предпросмотр напоминания.",
-        .notificationEarlyBody: "%@ (через %d мин)"
+        .notificationEarlyBody: "%@ (через %d мин)",
+        .notificationEarlySpeech: "Напоминание в %1$@, через %2$d мин. %3$@."
     ]
 }

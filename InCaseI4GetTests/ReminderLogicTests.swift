@@ -111,6 +111,44 @@ final class ReminderLogicTests: XCTestCase {
         XCTAssertEqual(AppLanguage.chinese.text(.commonDelete), "删除")
     }
 
+    func testReminderSpeechUsesExactTime() {
+        let fireDate = Calendar.current.date(
+            from: DateComponents(
+                year: 2026,
+                month: 1,
+                day: 1,
+                hour: 15,
+                minute: 0
+            )
+        )!
+        let timeText = ReminderVoiceStore.timeText(
+            for: fireDate,
+            language: .english
+        )
+        let speech = AppLanguage.english.format(
+            .alertSpeech,
+            timeText,
+            "Take medicine"
+        )
+
+        XCTAssertTrue(speech.contains("3:00"))
+        XCTAssertTrue(speech.contains("Take medicine"))
+        XCTAssertFalse(speech.contains("It's time"))
+    }
+
+    func testReminderSoundNamesAreStable() {
+        let id = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
+
+        XCTAssertEqual(
+            ReminderVoiceStore.soundName(for: id, kind: .main),
+            "reminder-11111111-1111-1111-1111-111111111111-main.caf"
+        )
+        XCTAssertEqual(
+            ReminderVoiceStore.soundName(for: id, kind: .early),
+            "reminder-11111111-1111-1111-1111-111111111111-early.caf"
+        )
+    }
+
     private func makeReminder(
         fireDate: Date,
         repeatRule: ReminderRepeat

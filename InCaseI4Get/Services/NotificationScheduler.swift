@@ -27,11 +27,19 @@ enum NotificationScheduler {
     static func schedule(_ item: ReminderItem) async {
         guard !item.isCompleted, !item.shouldBeRemoved(at: Date()) else { return }
 
-        let center = UNUserNotificationCenter.current()
-        let pending = await center.pendingNotificationRequests()
-        let existing = Set(pending.map(\.identifier))
+        _ = await ReminderVoiceStore.prepareSounds(for: item)
 
-        for request in makeRequests(for: item) where !existing.contains(request.identifier) {
+        let center = UNUserNotificationCenter.current()
+        let requests = makeRequests(for: item)
+        let requestIdentifiers = requests.map(\.identifier)
+
+        if !requestIdentifiers.isEmpty {
+            center.removePendingNotificationRequests(
+                withIdentifiers: requestIdentifiers
+            )
+        }
+
+        for request in requests {
             try? await center.add(request)
         }
     }
@@ -48,6 +56,7 @@ enum NotificationScheduler {
             center.removePendingNotificationRequests(withIdentifiers: identifiers)
         }
         center.removeDeliveredNotifications(withIdentifiers: identifiers)
+        ReminderVoiceStore.removeSounds(for: item)
     }
 
     static func completeCurrent(_ item: ReminderItem) async {
@@ -61,7 +70,15 @@ enum NotificationScheduler {
     static func snooze(_ item: ReminderItem, minutes: Int = 10) async {
         let center = UNUserNotificationCenter.current()
         let fireDate = Date().addingTimeInterval(TimeInterval(minutes * 60))
-        let content = makeContent(for: item, body: item.title)
+        let soundName = await ReminderVoiceStore.prepareSnoozeSound(
+            for: item,
+            at: fireDate
+        )
+        let content = makeContent(
+            for: item,
+            body: item.title,
+            soundName: soundName
+        )
         let request = UNNotificationRequest(
             identifier: "\(item.id.uuidString).snooze",
             content: content,
@@ -101,6 +118,10 @@ enum NotificationScheduler {
     ) -> [UNNotificationRequest] {
         var requests: [UNNotificationRequest] = []
         let now = Date()
+        let mainSoundName = ReminderVoiceStore.soundName(
+            for: item.id,
+            kind: .main
+        )
 
         if item.earlyMinutes > 0 {
             let earlyDate = item.fireDate.addingTimeInterval(TimeInterval(-item.earlyMinutes * 60))
@@ -114,7 +135,11 @@ enum NotificationScheduler {
                             item.earlyMinutes
                         ),
                         userInfo: reminderUserInfo(for: item),
-                        fireDate: earlyDate
+                        fireDate: earlyDate,
+                        soundName: ReminderVoiceStore.soundName(
+                            for: item.id,
+                            kind: .early
+                        )
                     )
                 )
             }
@@ -126,7 +151,8 @@ enum NotificationScheduler {
                     identifier: baseID,
                     body: item.title,
                     userInfo: reminderUserInfo(for: item),
-                    fireDate: item.fireDate
+                    fireDate: item.fireDate,
+                    soundName: mainSoundName
                 )
             )
         }
@@ -140,7 +166,8 @@ enum NotificationScheduler {
                         identifier: "\(baseID).strike-1",
                         body: item.title,
                         userInfo: reminderUserInfo(for: item),
-                        fireDate: strikeOne
+                        fireDate: strikeOne,
+                        soundName: mainSoundName
                     )
                 )
             }
@@ -150,7 +177,8 @@ enum NotificationScheduler {
                         identifier: "\(baseID).strike-2",
                         body: item.title,
                         userInfo: reminderUserInfo(for: item),
-                        fireDate: strikeTwo
+                        fireDate: strikeTwo,
+                        soundName: mainSoundName
                     )
                 )
             }
@@ -168,6 +196,10 @@ enum NotificationScheduler {
         let endBoundary = ReminderItem.endOfLocalDay(for: endDate)
         var occurrences: [Date] = []
         var cursor = item.fireDate
+        let soundName = ReminderVoiceStore.soundName(
+            for: item.id,
+            kind: .main
+        )
 
         while occurrences.count < 60 {
             if cursor > endBoundary {
@@ -185,7 +217,8 @@ enum NotificationScheduler {
                 identifier: "\(baseID).occ.\(Int(date.timeIntervalSince1970))",
                 body: item.title,
                 userInfo: reminderUserInfo(for: item),
-                fireDate: date
+                fireDate: date,
+                soundName: soundName
             )
         }
     }
@@ -204,7 +237,14 @@ enum NotificationScheduler {
             return []
         }
 
-        let content = makeContent(for: item, body: item.title)
+        let content = makeContent(
+            for: item,
+            body: item.title,
+            soundName: ReminderVoiceStore.soundName(
+                for: item.id,
+                kind: .main
+            )
+        )
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
         let request = UNNotificationRequest(identifier: baseID, content: content, trigger: trigger)
         return [request]
@@ -236,12 +276,15 @@ enum NotificationScheduler {
         identifier: String,
         body: String,
         userInfo: [String: Any],
-        fireDate: Date
+        fireDate: Date,
+        soundName: String?
     ) -> UNNotificationRequest {
         let content = UNMutableNotificationContent()
         content.title = "InCaseI4Get"
         content.body = body
-        content.sound = .default
+        content.sound = soundName.map {
+            UNNotificationSound(named: UNNotificationSoundName($0))
+        } ?? .default
         content.categoryIdentifier = ReminderActions.categoryIdentifier
         content.userInfo = userInfo
 
@@ -253,11 +296,17 @@ enum NotificationScheduler {
         return UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
     }
 
-    private static func makeContent(for item: ReminderItem, body: String) -> UNMutableNotificationContent {
+    private static func makeContent(
+        for item: ReminderItem,
+        body: String,
+        soundName: String?
+    ) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
         content.title = "InCaseI4Get"
         content.body = body
-        content.sound = .default
+        content.sound = soundName.map {
+            UNNotificationSound(named: UNNotificationSoundName($0))
+        } ?? .default
         content.categoryIdentifier = ReminderActions.categoryIdentifier
         content.userInfo = reminderUserInfo(for: item)
         return content

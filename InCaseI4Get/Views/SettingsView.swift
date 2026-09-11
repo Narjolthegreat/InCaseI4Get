@@ -132,6 +132,7 @@ struct SettingsView: View {
             await NotificationScheduler.cancel(item)
             modelContext.delete(item)
         }
+        ReminderVoiceStore.removeAllSounds()
         try? modelContext.save()
         dismiss()
     }

@@ -184,6 +184,9 @@ struct HomeView: View {
             .onChange(of: settings.language) { _, _ in
                 AppDelegate.configureNotificationCategories()
                 Task { @MainActor in
+                    for item in activeReminders {
+                        await NotificationScheduler.cancel(item)
+                    }
                     await NotificationScheduler.reschedule(activeReminders)
                 }
             }
@@ -1111,11 +1114,29 @@ struct ReminderAlertView: View {
 
     private func startMultimodalAlert() {
         if settings.ttsEnabled {
-            speaker.speak(
-                settings.language.format(.alertSpeech, reminder.title),
-                languageCode: settings.language.speechLocale,
-                volume: settings.speechVolume
+            let timeText = ReminderVoiceStore.timeText(
+                for: reminder.fireDate,
+                language: settings.language
             )
+            let sentSoundURL = ReminderVoiceStore.soundURL(
+                for: reminder.id,
+                kind: .main
+            )
+
+            if !speaker.playSound(
+                at: sentSoundURL,
+                volume: settings.speechVolume
+            ) {
+                speaker.speak(
+                    settings.language.format(
+                        .alertSpeech,
+                        timeText,
+                        reminder.title
+                    ),
+                    languageCode: settings.language.speechLocale,
+                    volume: settings.speechVolume
+                )
+            }
         }
 
         let generator = UINotificationFeedbackGenerator()

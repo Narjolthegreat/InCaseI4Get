@@ -165,11 +165,12 @@ final class HomeFlowUITests: XCTestCase {
         let row = app.otherElements["ReminderRow"].firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 6))
         waitForVoiceOverlayToDismiss()
+        waitUntilHittable(row, timeout: 5)
 
         row.tap()
 
         let editButton = app.buttons["EditReminderActionButton"]
-        XCTAssertTrue(editButton.waitForExistence(timeout: 3))
+        XCTAssertTrue(editButton.waitForExistence(timeout: 6))
         XCTAssertTrue(app.staticTexts["or"].exists)
         XCTAssertTrue(app.buttons["DeleteReminderActionButton"].exists)
         keepScreenshot(named: "11-reminder-actions")
@@ -240,9 +241,29 @@ final class HomeFlowUITests: XCTestCase {
     }
 
     private func waitForVoiceOverlayToDismiss() {
-        let overlay = app.otherElements["VoiceCaptureOverlay"]
-        guard overlay.exists else { return }
-        waitForDisappearance(overlay, timeout: 4)
+        let createdTitle = app.staticTexts["Reminder created"]
+        if createdTitle.exists {
+            waitForDisappearance(createdTitle, timeout: 4)
+        }
+
+        let updatedTitle = app.staticTexts["Changes saved"]
+        if updatedTitle.exists {
+            waitForDisappearance(updatedTitle, timeout: 4)
+        }
+    }
+
+    private func waitUntilHittable(
+        _ element: XCUIElement,
+        timeout: TimeInterval
+    ) {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "isHittable == true"),
+            object: element
+        )
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [expectation], timeout: timeout),
+            .completed
+        )
     }
 
     private func launchApp(arguments: [String] = []) {

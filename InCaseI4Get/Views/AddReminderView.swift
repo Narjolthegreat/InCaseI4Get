@@ -45,28 +45,35 @@ struct AddReminderView: View {
                 repeatSection
                 strikeSection
             }
-            .navigationTitle("New Reminder")
+            .navigationTitle(settings.language.text(.addTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(settings.language.text(.commonCancel)) {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(isSaving ? "Saving…" : "Save") {
+                    Button(
+                        isSaving
+                            ? settings.language.text(.addSaving)
+                            : settings.language.text(.commonSave)
+                    ) {
                         save()
                     }
                     .disabled(trimmedTitle.isEmpty || isSaving)
                 }
             }
-            .alert("Notifications are required", isPresented: $showsPermissionAlert) {
-                Button("Open Settings") {
+            .alert(
+                settings.language.text(.addNotificationsRequired),
+                isPresented: $showsPermissionAlert
+            ) {
+                Button(settings.language.text(.addOpenSettings)) {
                     openSystemSettings()
                 }
-                Button("OK", role: .cancel) {}
+                Button(settings.language.text(.commonOK), role: .cancel) {}
             } message: {
-                Text("Allow notifications so reminders can reach you at the right time.")
+                Text(settings.language.text(.addNotificationMessage))
             }
             .onAppear {
                 earlyMinutes = settings.earlyMinutes
@@ -85,7 +92,11 @@ struct AddReminderView: View {
         Section {
             HStack(alignment: .center, spacing: 12) {
                 microphoneButton
-                TextField("Speak or type…", text: $sentence, axis: .vertical)
+                TextField(
+                    settings.language.text(.addSpeakOrType),
+                    text: $sentence,
+                    axis: .vertical
+                )
                     .lineLimit(1...3)
                     .onSubmit(parseSentence)
                 Button {
@@ -94,11 +105,15 @@ struct AddReminderView: View {
                     Image(systemName: "text.magnifyingglass")
                 }
                 .disabled(sentence.isEmpty)
-                .accessibilityLabel("Parse sentence")
+                .accessibilityLabel(settings.language.text(.addParseSentence))
             }
 
             if transcriber.isRecording {
-                Text(transcriber.transcript.isEmpty ? "Listening…" : transcriber.transcript)
+                Text(
+                    transcriber.transcript.isEmpty
+                        ? settings.language.text(.addListening)
+                        : transcriber.transcript
+                )
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else if let message = transcriber.permissionMessage {
@@ -113,38 +128,49 @@ struct AddReminderView: View {
                     .foregroundStyle(.secondary)
             }
 
-            TextField("Reminder title", text: $title, axis: .vertical)
+            TextField(
+                settings.language.text(.addReminderTitle),
+                text: $title,
+                axis: .vertical
+            )
                 .lineLimit(1...4)
-            TextField("Note (optional)", text: $note, axis: .vertical)
+            TextField(
+                settings.language.text(.addNoteOptional),
+                text: $note,
+                axis: .vertical
+            )
                 .lineLimit(1...3)
         } header: {
-            Text("What should we remember?")
+            Text(settings.language.text(.addWhatRemember))
         }
     }
 
     private var reminderSection: some View {
         Section {
             DatePicker(
-                "Remind at",
+                settings.language.text(.addRemindAt),
                 selection: $fireDate,
                 in: Date()...,
                 displayedComponents: [.date, .hourAndMinute]
             )
         } header: {
-            Text("When")
+            Text(settings.language.text(.addWhen))
         }
     }
 
     private var repeatSection: some View {
         Section {
-            Picker("Repeat", selection: $repeatRule) {
+            Picker(
+                settings.language.text(.confirmationRepeat),
+                selection: $repeatRule
+            ) {
                 ForEach(ReminderRepeat.allCases) { rule in
-                    Text(rule.displayName).tag(rule)
+                    Text(settings.language.text(rule.localizationKey)).tag(rule)
                 }
             }
             if repeatRule != .once {
                 DatePicker(
-                    "End on",
+                    settings.language.text(.addEndOn),
                     selection: Binding(
                         get: { repeatEndDate ?? Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date() },
                         set: { repeatEndDate = $0 }
@@ -154,28 +180,41 @@ struct AddReminderView: View {
                 )
             }
         } header: {
-            Text("Repeat")
+            Text(settings.language.text(.confirmationRepeat))
         } footer: {
-            Text(repeatRule == .once ? "One-time reminders clear after midnight." : "Use an end date for tasks like medication for 7 days.")
+            Text(
+                repeatRule == .once
+                    ? settings.language.text(.addRepeatOnceFooter)
+                    : settings.language.text(.addRepeatFooter)
+            )
         }
     }
 
     private var strikeSection: some View {
         Section {
-            Toggle("Strike again every 30 seconds", isOn: $strikeEnabled)
-            Picker("Early reminder", selection: $earlyMinutes) {
-                Text("None").tag(0)
-                Text("5 minutes").tag(5)
-                Text("10 minutes").tag(10)
-                Text("15 minutes").tag(15)
+            Toggle(
+                settings.language.text(.addStrikeEvery),
+                isOn: $strikeEnabled
+            )
+            Picker(
+                settings.language.text(.addEarlyReminder),
+                selection: $earlyMinutes
+            ) {
+                Text(settings.language.text(.commonNone)).tag(0)
+                Text(settings.language.text(.addMinutes5)).tag(5)
+                Text(settings.language.text(.addMinutes10)).tag(10)
+                Text(settings.language.text(.addMinutes15)).tag(15)
             }
             Button {
                 previewSpeech()
             } label: {
-                Label("Preview voice", systemImage: "speaker.wave.2.fill")
+                Label(
+                    settings.language.text(.addPreviewVoice),
+                    systemImage: "speaker.wave.2.fill"
+                )
             }
         } header: {
-            Text("Alert style")
+            Text(settings.language.text(.settingsAlertStyle))
         }
     }
 
@@ -197,7 +236,11 @@ struct AddReminderView: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(transcriber.isRecording ? "Stop recording" : "Start voice input")
+        .accessibilityLabel(
+            transcriber.isRecording
+                ? settings.language.text(.addStopRecording)
+                : settings.language.text(.addStartVoiceInput)
+        )
     }
 
     private func startVoiceInput() {
@@ -218,11 +261,13 @@ struct AddReminderView: View {
         if parsed.repeatRule != .once {
             repeatRule = parsed.repeatRule
         }
-        parseMessage = "Parsed: \(parsed.title)"
+        parseMessage = settings.language.format(.addParsed, parsed.title)
     }
 
     private func previewSpeech() {
-        let text = trimmedTitle.isEmpty ? "This is a reminder preview." : trimmedTitle
+        let text = trimmedTitle.isEmpty
+            ? settings.language.text(.addPreviewSentence)
+            : trimmedTitle
         speaker.speak(text, languageCode: settings.language.speechLocale, volume: settings.speechVolume)
     }
 

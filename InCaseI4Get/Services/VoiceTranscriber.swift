@@ -46,7 +46,7 @@ final class VoiceTranscriber: NSObject, ObservableObject {
             let speechGranted = await requestSpeechAccess()
 
             guard micGranted, speechGranted else {
-                fail("Microphone and speech recognition permission are required.")
+                fail(AppLanguage.current.text(.voiceErrorPermissions))
                 return
             }
 
@@ -54,12 +54,12 @@ final class VoiceTranscriber: NSObject, ObservableObject {
                 let recognizer = SFSpeechRecognizer(locale: Locale(identifier: languageCode)),
                 recognizer.isAvailable
             else {
-                fail("Speech recognition is unavailable for this language. You can still type.")
+                fail(AppLanguage.current.text(.voiceErrorUnavailable))
                 return
             }
 
             guard !stopRequested else {
-                fail("No speech was captured.")
+                fail(AppLanguage.current.text(.voiceErrorNoSpeech))
                 return
             }
 
@@ -104,7 +104,7 @@ final class VoiceTranscriber: NSObject, ObservableObject {
             isRecording = true
             permissionMessage = nil
         } catch {
-            fail("Unable to start the microphone.")
+            fail(AppLanguage.current.text(.voiceErrorMicrophone))
             cleanup()
             return
         }

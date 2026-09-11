@@ -81,13 +81,13 @@ final class HomeFlowUITests: XCTestCase {
         speakButton.press(forDuration: 0.8)
 
         XCTAssertTrue(
-            app.staticTexts["正在转成文字"].waitForExistence(timeout: 3),
+            app.staticTexts["Converting to text"].waitForExistence(timeout: 3),
             "Voice transcription stage did not appear."
         )
         keepScreenshot(named: "05-voice-transcript")
 
         XCTAssertTrue(
-            app.staticTexts["正在概括任务"].waitForExistence(timeout: 4),
+            app.staticTexts["Summarizing task"].waitForExistence(timeout: 4),
             "Voice summary stage did not appear."
         )
         keepScreenshot(named: "06-voice-summary")

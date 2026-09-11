@@ -93,6 +93,24 @@ final class ReminderLogicTests: XCTestCase {
         )
     }
 
+    func testAllLanguagesHaveCompleteLocalization() {
+        for language in AppLanguage.allCases {
+            XCTAssertTrue(
+                L10n.isComplete(for: language),
+                "\(language.rawValue) is missing localization entries."
+            )
+        }
+    }
+
+    func testActionPromptUsesSelectedLanguage() {
+        XCTAssertEqual(AppLanguage.english.text(.commonEdit), "Edit")
+        XCTAssertEqual(AppLanguage.english.text(.commonOr), "or")
+        XCTAssertEqual(AppLanguage.english.text(.commonDelete), "Delete")
+        XCTAssertEqual(AppLanguage.chinese.text(.commonEdit), "重编辑")
+        XCTAssertEqual(AppLanguage.chinese.text(.commonOr), "or")
+        XCTAssertEqual(AppLanguage.chinese.text(.commonDelete), "删除")
+    }
+
     private func makeReminder(
         fireDate: Date,
         repeatRule: ReminderRepeat

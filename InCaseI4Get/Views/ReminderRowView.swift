@@ -18,6 +18,8 @@ enum ReminderUrgencyScale {
 }
 
 struct ReminderRowView: View {
+    @Environment(AppSettings.self) private var settings
+
     let reminder: ReminderItem
     let now: Date
     let onTap: () -> Void
@@ -36,12 +38,20 @@ struct ReminderRowView: View {
                 }
                 HStack(spacing: 8) {
                     if reminder.repeatRule != .once {
-                        Label(reminder.repeatRule.displayName, systemImage: "repeat")
+                        Label(
+                            settings.language.text(reminder.repeatRule.localizationKey),
+                            systemImage: "repeat"
+                        )
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
                     if reminder.earlyMinutes > 0 {
-                        Text("Early \(reminder.earlyMinutes) min")
+                        Text(
+                            settings.language.format(
+                                .rowEarlyMinutes,
+                                reminder.earlyMinutes
+                            )
+                        )
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }
@@ -67,12 +77,14 @@ struct ReminderRowView: View {
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
         .accessibilityElement(children: .contain)
-        .accessibilityHint("Opens edit and delete actions")
+        .accessibilityHint(settings.language.text(.rowActionsHint))
         .accessibilityIdentifier("ReminderRow")
     }
 }
 
 private struct ReminderUrgencySphere: View {
+    @Environment(AppSettings.self) private var settings
+
     let fireDate: Date
     let referenceDate: Date
 
@@ -119,27 +131,27 @@ private struct ReminderUrgencySphere: View {
         .frame(width: 20, height: 20)
         .shadow(color: sphereColor.opacity(0.42), radius: 3, x: 0, y: 2)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Time until reminder")
+        .accessibilityLabel(settings.language.text(.rowTimeUntil))
         .accessibilityValue(accessibilityDescription)
     }
 
     private var accessibilityDescription: String {
         let seconds = fireDate.timeIntervalSince(referenceDate)
         if seconds <= 0 {
-            return "Due now or overdue"
+            return settings.language.text(.rowDueOverdue)
         }
         if seconds < 60 * 60 {
-            return "Due within an hour"
+            return settings.language.text(.rowDueHour)
         }
         if seconds < 24 * 60 * 60 {
-            return "Due today"
+            return settings.language.text(.rowDueToday)
         }
         if seconds < 7 * 24 * 60 * 60 {
-            return "Due this week"
+            return settings.language.text(.rowDueWeek)
         }
         if seconds < 30 * 24 * 60 * 60 {
-            return "Due within a month"
+            return settings.language.text(.rowDueMonth)
         }
-        return "More than a month away"
+        return settings.language.text(.rowDueLater)
     }
 }

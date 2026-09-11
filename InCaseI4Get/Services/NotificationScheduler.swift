@@ -108,7 +108,11 @@ enum NotificationScheduler {
                 requests.append(
                     makeRequest(
                         identifier: "\(baseID).early",
-                        body: "\(item.title) (in \(item.earlyMinutes) min)",
+                        body: AppLanguage.current.format(
+                            .notificationEarlyBody,
+                            item.title,
+                            item.earlyMinutes
+                        ),
                         userInfo: reminderUserInfo(for: item),
                         fireDate: earlyDate
                     )

@@ -52,15 +52,17 @@ struct HomeView: View {
             Group {
                 if activeReminders.isEmpty {
                     ContentUnavailableView(
-                        "Nothing scheduled",
+                        settings.language.text(.homeEmptyTitle),
                         systemImage: "bell.badge",
-                        description: Text("Speak or type a one-line reminder.")
+                        description: Text(
+                            settings.language.text(.homeEmptyDescription)
+                        )
                     )
                 } else {
                     reminderList
                 }
             }
-            .navigationTitle("In Case I Forget")
+            .navigationTitle(settings.language.text(.appTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -69,7 +71,7 @@ struct HomeView: View {
                     } label: {
                         Image(systemName: "gearshape.fill")
                     }
-                    .accessibilityLabel("Settings")
+                    .accessibilityLabel(settings.language.text(.homeSettings))
                     .accessibilityIdentifier("HomeSettingsButton")
                 }
             }
@@ -179,6 +181,12 @@ struct HomeView: View {
                     }
                 }
             }
+            .onChange(of: settings.language) { _, _ in
+                AppDelegate.configureNotificationCategories()
+                Task { @MainActor in
+                    await NotificationScheduler.reschedule(activeReminders)
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .reminderWillPresent)) { note in
                 guard let id = note.object as? UUID else { return }
                 presentReminder(id: id)
@@ -197,17 +205,17 @@ struct HomeView: View {
     private var reminderList: some View {
         TimelineView(.periodic(from: .now, by: 60)) { context in
             List {
-                Section("Today") {
+                Section(settings.language.text(.homeToday)) {
                     if todayReminders.isEmpty {
-                        Text("Nothing today")
+                        Text(settings.language.text(.homeNothingToday))
                             .foregroundStyle(.secondary)
                     } else {
                         rows(for: todayReminders, now: context.date)
                     }
                 }
-                Section("Upcoming") {
+                Section(settings.language.text(.homeUpcoming)) {
                     if upcomingReminders.isEmpty {
-                        Text("Nothing later")
+                        Text(settings.language.text(.homeNothingLater))
                             .foregroundStyle(.secondary)
                     } else {
                         rows(for: upcomingReminders, now: context.date)
@@ -231,15 +239,15 @@ struct HomeView: View {
             Button {
                 // Press-and-hold is handled by the gesture below.
             } label: {
-                Label("Speak", systemImage: "mic.fill")
+                Label(settings.language.text(.homeSpeak), systemImage: "mic.fill")
                     .font(.body.weight(.semibold))
                     .frame(maxWidth: .infinity, minHeight: 52)
             }
             .buttonStyle(.bordered)
             .controlSize(.large)
-            .accessibilityLabel("Create reminder by voice")
+            .accessibilityLabel(settings.language.text(.homeVoiceA11y))
             .accessibilityIdentifier("HomeSpeakButton")
-            .accessibilityHint("Press and hold to speak")
+            .accessibilityHint(settings.language.text(.homeVoiceHint))
             .onLongPressGesture(
                 minimumDuration: 0.1,
                 maximumDistance: 60,
@@ -256,13 +264,13 @@ struct HomeView: View {
             Button {
                 showManualReminderEntry()
             } label: {
-                Label("Type", systemImage: "keyboard.fill")
+                Label(settings.language.text(.homeType), systemImage: "keyboard.fill")
                     .font(.body.weight(.semibold))
                     .frame(maxWidth: .infinity, minHeight: 52)
             }
             .buttonStyle(.bordered)
             .controlSize(.large)
-            .accessibilityLabel("Type a reminder")
+            .accessibilityLabel(settings.language.text(.homeTypeA11y))
             .accessibilityIdentifier("HomeTypeButton")
         }
         .padding(.horizontal, 20)
@@ -359,7 +367,7 @@ struct HomeView: View {
             let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !cleanTitle.isEmpty else {
                 showVoiceResult(
-                    .failed("任务标题不能为空。"),
+                    .failed(settings.language.text(.voiceErrorEmptyTitle)),
                     duration: .seconds(2)
                 )
                 return
@@ -407,14 +415,17 @@ struct HomeView: View {
         Task { @MainActor in
             let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else {
-                showVoiceResult(.failed("没有听清，请按住 Speak 再说一次。"), duration: .seconds(2))
+                showVoiceResult(
+                    .failed(settings.language.text(.voiceErrorNoTranscript)),
+                    duration: .seconds(2)
+                )
                 return
             }
 
             let parsed = ReminderSentenceParser.parse(trimmed)
             guard let fireDate = parsed.fireDate else {
                 showVoiceResult(
-                    .failed("没有识别出明确的提醒时间，请说得具体一些。"),
+                    .failed(settings.language.text(.voiceErrorNoTime)),
                     duration: .seconds(2.5)
                 )
                 return
@@ -470,7 +481,7 @@ struct HomeView: View {
             let granted = await NotificationScheduler.ensureAuthorization()
             guard granted else {
                 showVoiceResult(
-                    .failed("需要通知权限才能创建提醒，请到系统设置中允许通知。"),
+                    .failed(settings.language.text(.voiceErrorPermission)),
                     duration: .seconds(2.5)
                 )
                 return
@@ -479,7 +490,7 @@ struct HomeView: View {
             let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !cleanTitle.isEmpty else {
                 showVoiceResult(
-                    .failed("任务标题不能为空。"),
+                    .failed(settings.language.text(.voiceErrorEmptyTitle)),
                     duration: .seconds(2)
                 )
                 return
@@ -528,15 +539,6 @@ private struct ReminderConfirmationOverlay: View {
         case create
         case edit
 
-        var actionTitle: String {
-            switch self {
-            case .create:
-                "Create"
-            case .edit:
-                "Save"
-            }
-        }
-
         var accessibilityIdentifier: String {
             switch self {
             case .create:
@@ -546,6 +548,8 @@ private struct ReminderConfirmationOverlay: View {
             }
         }
     }
+
+    @Environment(AppSettings.self) private var settings
 
     let draft: ReminderDraft
     @ObservedObject var purchaseManager: PurchaseManager
@@ -599,10 +603,14 @@ private struct ReminderConfirmationOverlay: View {
 
                 VStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Task")
+                        Text(settings.language.text(.confirmationTask))
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        TextField("Reminder title", text: $title, axis: .vertical)
+                        TextField(
+                            settings.language.text(.confirmationTitlePlaceholder),
+                            text: $title,
+                            axis: .vertical
+                        )
                             .lineLimit(1...2)
                             .focused($isTitleFocused)
                             .accessibilityIdentifier("VoiceReminderTitleField")
@@ -615,12 +623,12 @@ private struct ReminderConfirmationOverlay: View {
                     )
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Reminder time")
+                        Text(settings.language.text(.confirmationReminderTime))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         HStack(spacing: 8) {
                             DatePicker(
-                                "Reminder time",
+                                settings.language.text(.confirmationReminderTime),
                                 selection: $fireDate,
                                 in: Date()...,
                                 displayedComponents: [.date, .hourAndMinute]
@@ -648,7 +656,7 @@ private struct ReminderConfirmationOverlay: View {
                     repeatBox
 
                     HStack(spacing: 20) {
-                        Button("Cancel") {
+                        Button(settings.language.text(.commonCancel)) {
                             onCancel()
                         }
                         .font(.headline.bold())
@@ -661,7 +669,11 @@ private struct ReminderConfirmationOverlay: View {
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("CancelVoiceReminderButton")
 
-                        Button(mode.actionTitle) {
+                        Button(
+                            mode == .create
+                                ? settings.language.text(.commonCreate)
+                                : settings.language.text(.commonSave)
+                        ) {
                             onConfirm(trimmedTitle, fireDate, repeatRule)
                         }
                         .font(.headline.bold())
@@ -710,7 +722,7 @@ private struct ReminderConfirmationOverlay: View {
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
-                    Button("Done") {
+                    Button(settings.language.text(.commonDone)) {
                         isTitleFocused = false
                     }
                     .accessibilityIdentifier("DismissReminderKeyboardButton")
@@ -721,20 +733,20 @@ private struct ReminderConfirmationOverlay: View {
 
     private var repeatBox: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Repeat")
+            Text(settings.language.text(.confirmationRepeat))
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
             if purchaseManager.isPro {
                 Menu {
                     ForEach(ReminderRepeat.allCases) { rule in
-                        Button(rule.displayName) {
+                        Button(settings.language.text(rule.localizationKey)) {
                             repeatRule = rule
                         }
                     }
                 } label: {
                     HStack {
-                        Text(repeatRule.displayName)
+                        Text(settings.language.text(repeatRule.localizationKey))
                             .foregroundStyle(.primary)
                         Spacer()
                         Image(systemName: "chevron.up.chevron.down")
@@ -749,7 +761,7 @@ private struct ReminderConfirmationOverlay: View {
                     showsPaywall = true
                 } label: {
                     HStack {
-                        Text(repeatRule.displayName)
+                        Text(settings.language.text(repeatRule.localizationKey))
                             .foregroundStyle(.primary)
                         Spacer()
                         Image(systemName: "lock.fill")
@@ -770,6 +782,8 @@ private struct ReminderConfirmationOverlay: View {
 }
 
 private struct RepeatReminderProPaywallView: View {
+    @Environment(AppSettings.self) private var settings
+
     @ObservedObject var purchaseManager: PurchaseManager
     let onPurchased: () -> Void
     let onClose: () -> Void
@@ -784,11 +798,11 @@ private struct RepeatReminderProPaywallView: View {
                     .font(.system(size: 48))
                     .foregroundStyle(.orange)
 
-                Text("Unlock Repeating Reminders")
+                Text(settings.language.text(.paywallTitle))
                     .font(.title2.bold())
                     .multilineTextAlignment(.center)
 
-                Text("Pay once and keep daily, weekly and monthly reminders forever.")
+                Text(settings.language.text(.paywallDescription))
                     .font(.body)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
@@ -810,7 +824,7 @@ private struct RepeatReminderProPaywallView: View {
                 .disabled(purchaseManager.isPurchasing)
                 .accessibilityIdentifier("PurchaseRepeatProButton")
 
-                Button("Restore Purchase") {
+                Button(settings.language.text(.paywallRestore)) {
                     Task {
                         if await purchaseManager.restorePurchases() {
                             onPurchased()
@@ -828,7 +842,7 @@ private struct RepeatReminderProPaywallView: View {
                         .multilineTextAlignment(.center)
                 }
 
-                Button("Close") {
+                Button(settings.language.text(.paywallClose)) {
                     onClose()
                 }
                 .accessibilityIdentifier("ClosePaywallButton")
@@ -843,13 +857,18 @@ private struct RepeatReminderProPaywallView: View {
 
     private var purchaseLabel: String {
         if let product = purchaseManager.product {
-            return "Unlock Forever · \(product.displayPrice)"
+            return settings.language.format(
+                .paywallUnlockPrice,
+                product.displayPrice
+            )
         }
-        return "Unlock Forever"
+        return settings.language.text(.paywallUnlockForever)
     }
 }
 
 private struct VoiceCaptureOverlay: View {
+    @Environment(AppSettings.self) private var settings
+
     let phase: VoiceCapturePhase
     let transcript: String
     let audioLevel: Double
@@ -893,26 +912,30 @@ private struct VoiceCaptureOverlay: View {
     private var title: String {
         switch phase {
         case .listening:
-            "正在聆听"
+            settings.language.text(.voiceListening)
         case .processing:
-            "正在转成文字"
+            settings.language.text(.voiceProcessing)
         case .summarizing:
-            "正在概括任务"
+            settings.language.text(.voiceSummarizing)
         case .completed:
-            "已创建提醒"
+            settings.language.text(.voiceCreated)
         case .updated:
-            "已保存修改"
+            settings.language.text(.voiceUpdated)
         case .failed:
-            "没有完成"
+            settings.language.text(.voiceFailed)
         }
     }
 
     private var detail: String {
         switch phase {
         case .listening:
-            transcript.isEmpty ? "请说出提醒内容，松开结束" : transcript
+            transcript.isEmpty
+                ? settings.language.text(.voiceListeningHint)
+                : transcript
         case .processing:
-            transcript.isEmpty ? "正在把语音转成文字" : transcript
+            transcript.isEmpty
+                ? settings.language.text(.voiceProcessingHint)
+                : transcript
         case .summarizing(let title, let fireDate):
             "\(title) · \(fireDate.formatted(date: .abbreviated, time: .shortened))"
         case .completed(let title, let fireDate):
@@ -926,6 +949,8 @@ private struct VoiceCaptureOverlay: View {
 }
 
 private struct ReminderActionPrompt: View {
+    @Environment(AppSettings.self) private var settings
+
     let onEdit: () -> Void
     let onDelete: () -> Void
     let onDismiss: () -> Void
@@ -938,7 +963,7 @@ private struct ReminderActionPrompt: View {
 
             HStack(spacing: 10) {
                 Button(action: onEdit) {
-                    Text("重编辑")
+                    Text(settings.language.text(.commonEdit))
                         .font(.title3.bold())
                         .foregroundStyle(Color.accentColor)
                         .padding(.horizontal, 8)
@@ -947,12 +972,12 @@ private struct ReminderActionPrompt: View {
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("EditReminderActionButton")
 
-                Text("or")
+                Text(settings.language.text(.commonOr))
                     .font(.title3.weight(.medium))
                     .foregroundStyle(.secondary)
 
                 Button(role: .destructive, action: onDelete) {
-                    Text("删除")
+                    Text(settings.language.text(.commonDelete))
                         .font(.title3.bold())
                         .foregroundStyle(.red)
                         .padding(.horizontal, 8)
@@ -1006,10 +1031,6 @@ struct ReminderAlertView: View {
     @StateObject private var speaker = SpeechService()
     @State private var flashOn = false
 
-    private var speechLocale: String {
-        AppLanguage(rawValue: reminder.languageCode)?.speechLocale ?? "en-US"
-    }
-
     private var reminderDateText: String {
         reminder.fireDate.formatted(date: .abbreviated, time: .shortened)
     }
@@ -1035,7 +1056,7 @@ struct ReminderAlertView: View {
                     .accessibilityHidden(true)
 
                 VStack(spacing: 12) {
-                    Text("Reminder")
+                    Text(settings.language.text(.alertReminder))
                         .font(.headline)
                         .textCase(.uppercase)
                         .foregroundStyle(.secondary)
@@ -1048,7 +1069,10 @@ struct ReminderAlertView: View {
                         .font(.title3)
                         .foregroundStyle(.secondary)
                     if reminder.repeatRule != .once {
-                        Label(reminder.repeatRule.displayName, systemImage: "repeat")
+                        Label(
+                            settings.language.text(reminder.repeatRule.localizationKey),
+                            systemImage: "repeat"
+                        )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -1058,14 +1082,20 @@ struct ReminderAlertView: View {
 
                 VStack(spacing: 12) {
                     Button(action: onConfirm) {
-                        Label("Got it", systemImage: "checkmark.circle.fill")
+                        Label(
+                            settings.language.text(.alertGotIt),
+                            systemImage: "checkmark.circle.fill"
+                        )
                             .font(.title3.bold())
                             .frame(maxWidth: .infinity, minHeight: 54)
                     }
                     .buttonStyle(.borderedProminent)
 
                     Button(action: onSnooze) {
-                        Label("Snooze 10 min", systemImage: "clock.arrow.circlepath")
+                        Label(
+                            settings.language.text(.alertSnooze),
+                            systemImage: "clock.arrow.circlepath"
+                        )
                             .font(.body.bold())
                             .frame(maxWidth: .infinity, minHeight: 48)
                     }
@@ -1082,8 +1112,8 @@ struct ReminderAlertView: View {
     private func startMultimodalAlert() {
         if settings.ttsEnabled {
             speaker.speak(
-                "It's time. \(reminder.title). Don't forget.",
-                languageCode: speechLocale,
+                settings.language.format(.alertSpeech, reminder.title),
+                languageCode: settings.language.speechLocale,
                 volume: settings.speechVolume
             )
         }

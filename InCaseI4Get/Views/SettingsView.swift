@@ -15,33 +15,57 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("App language", selection: $settings.language) {
+                    Picker(
+                        settings.language.text(.settingsAppLanguage),
+                        selection: $settings.language
+                    ) {
                         ForEach(AppLanguage.allCases) { language in
                             Text(language.displayName).tag(language)
                         }
                     }
                 } header: {
-                    Text("Language")
+                    Text(settings.language.text(.settingsLanguage))
                 } footer: {
-                    Text("Language follows system by default in this version.")
+                    Text(settings.language.text(.settingsLanguageFooter))
                 }
 
                 Section {
-                    Toggle("Voice reading", isOn: $settings.ttsEnabled)
-                    Toggle("Haptic pulse", isOn: $settings.hapticsEnabled)
-                    Toggle("Screen flash", isOn: $settings.flashEnabled)
-                    Toggle("Strike reminders", isOn: $settings.strikeEnabled)
+                    Toggle(
+                        settings.language.text(.settingsVoiceReading),
+                        isOn: $settings.ttsEnabled
+                    )
+                    Toggle(
+                        settings.language.text(.settingsHapticPulse),
+                        isOn: $settings.hapticsEnabled
+                    )
+                    Toggle(
+                        settings.language.text(.settingsScreenFlash),
+                        isOn: $settings.flashEnabled
+                    )
+                    Toggle(
+                        settings.language.text(.settingsStrike),
+                        isOn: $settings.strikeEnabled
+                    )
                     Stepper(
-                        "Early reminder \(settings.earlyMinutes) min",
                         value: $settings.earlyMinutes,
                         in: 0...30,
                         step: 5
-                    )
+                    ) {
+                        Text(
+                            settings.language.format(
+                                .settingsEarlyMinutes,
+                                settings.earlyMinutes
+                            )
+                        )
+                    }
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Voice volume")
+                            Text(settings.language.text(.settingsVoiceVolume))
                             Spacer()
-                            Text("\(Int(settings.speechVolume * 100))%")
+                            Text(
+                                settings.speechVolume,
+                                format: .percent.precision(.fractionLength(0))
+                            )
                                 .foregroundStyle(.secondary)
                                 .monospacedDigit()
                         }
@@ -49,39 +73,54 @@ struct SettingsView: View {
                     }
                     .padding(.vertical, 4)
                 } header: {
-                    Text("Alert style")
+                    Text(settings.language.text(.settingsAlertStyle))
                 }
 
                 Section {
-                    Button("Clear all local data", role: .destructive) {
+                    Button(
+                        settings.language.text(.settingsClearAll),
+                        role: .destructive
+                    ) {
                         showsClearConfirmation = true
                     }
                 } header: {
-                    Text("Privacy")
+                    Text(settings.language.text(.settingsPrivacy))
                 } footer: {
-                    Text("This removes reminders, scheduled notifications and generated files. No account is used.")
+                    Text(settings.language.text(.settingsPrivacyFooter))
                 }
 
                 Section {
-                    LabeledContent("Version", value: "0.2.0")
+                    LabeledContent(
+                        settings.language.text(.settingsVersion),
+                        value: "0.2.0"
+                    )
                 }
             }
-            .navigationTitle("Settings")
+            .navigationTitle(settings.language.text(.settingsTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(settings.language.text(.commonDone)) {
                         dismiss()
                     }
                 }
             }
-            .alert("Clear everything?", isPresented: $showsClearConfirmation) {
-                Button("Delete all", role: .destructive) {
+            .alert(
+                settings.language.text(.settingsClearTitle),
+                isPresented: $showsClearConfirmation
+            ) {
+                Button(
+                    settings.language.text(.settingsDeleteAll),
+                    role: .destructive
+                ) {
                     Task { @MainActor in await clearAllData() }
                 }
-                Button("Cancel", role: .cancel) {}
+                Button(
+                    settings.language.text(.commonCancel),
+                    role: .cancel
+                ) {}
             } message: {
-                Text("All reminders will be permanently deleted from this device.")
+                Text(settings.language.text(.settingsClearMessage))
             }
         }
     }

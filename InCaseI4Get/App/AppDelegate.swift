@@ -18,21 +18,26 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        let center = UNUserNotificationCenter.current()
-        center.delegate = self
-        center.setNotificationCategories([Self.reminderCategory])
+        UNUserNotificationCenter.current().delegate = self
+        Self.configureNotificationCategories()
         return true
+    }
+
+    static func configureNotificationCategories() {
+        UNUserNotificationCenter.current().setNotificationCategories(
+            [reminderCategory]
+        )
     }
 
     private static var reminderCategory: UNNotificationCategory {
         let confirm = UNNotificationAction(
             identifier: ReminderActions.confirmIdentifier,
-            title: "Got it",
+            title: AppLanguage.current.text(.alertGotIt),
             options: [.foreground]
         )
         let snooze = UNNotificationAction(
             identifier: ReminderActions.snoozeIdentifier,
-            title: "10 min later",
+            title: AppLanguage.current.text(.alertSnoozeAction),
             options: []
         )
         return UNNotificationCategory(

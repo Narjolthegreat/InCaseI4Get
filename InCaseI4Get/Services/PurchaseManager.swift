@@ -51,7 +51,7 @@ final class PurchaseManager: ObservableObject {
 
     func purchasePro() async -> Bool {
         guard let product else {
-            errorMessage = "The Pro product is not available yet."
+            errorMessage = AppLanguage.current.text(.purchaseNotAvailable)
             return false
         }
 
@@ -67,7 +67,7 @@ final class PurchaseManager: ObservableObject {
                 await refreshEntitlements()
                 return isPro
             case .pending:
-                errorMessage = "The purchase is pending approval."
+                errorMessage = AppLanguage.current.text(.purchasePending)
             case .userCancelled:
                 break
             @unknown default:

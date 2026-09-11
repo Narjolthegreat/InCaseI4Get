@@ -20,6 +20,7 @@
 		C10011C10011C10011C10011 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20011C20011C20011C20011 /* AppSettings.swift */; };
 		C10012C10012C10012C10012 /* PendingActionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20012C20012C20012C20012 /* PendingActionStore.swift */; };
 		C10013C10013C10013C10013 /* PurchaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20014C20014C20014C20014 /* PurchaseManager.swift */; };
+		C10014C10014C10014C10014 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20015C20015C20015C20015 /* Localization.swift */; };
 		E10001E10001E10001E10001 /* ReminderLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20001E20001E20001E20001 /* ReminderLogicTests.swift */; };
 		E10002E10002E10002E10002 /* HomeFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20002E20002E20002E20002 /* HomeFlowUITests.swift */; };
 /* End PBXBuildFile section */
@@ -56,6 +57,7 @@
 		C20012C20012C20012C20012 /* PendingActionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingActionStore.swift; sourceTree = "<group>"; };
 		C20013C20013C20013C20013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C20014C20014C20014C20014 /* PurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseManager.swift; sourceTree = "<group>"; };
+		C20015C20015C20015C20015 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		C80001C80001C80001C80001 /* InCaseI4Get.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InCaseI4Get.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E20001E20001E20001E20001 /* ReminderLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderLogicTests.swift; sourceTree = "<group>"; };
 		E20002E20002E20002E20002 /* HomeFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeFlowUITests.swift; sourceTree = "<group>"; };
@@ -144,6 +146,7 @@
 			children = (
 				C20011C20011C20011C20011 /* AppSettings.swift */,
 				C20012C20012C20012C20012 /* PendingActionStore.swift */,
+				C20015C20015C20015C20015 /* Localization.swift */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -319,6 +322,7 @@
 				C10011C10011C10011C10011 /* AppSettings.swift in Sources */,
 				C10012C10012C10012C10012 /* PendingActionStore.swift in Sources */,
 				C10013C10013C10013C10013 /* PurchaseManager.swift in Sources */,
+				C10014C10014C10014C10014 /* Localization.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

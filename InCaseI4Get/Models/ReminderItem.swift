@@ -9,12 +9,12 @@ enum ReminderRepeat: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var displayName: String {
+    var localizationKey: L10n.Key {
         switch self {
-        case .once: "Once"
-        case .daily: "Daily"
-        case .weekly: "Weekly"
-        case .monthly: "Monthly"
+        case .once: .repeatOnce
+        case .daily: .repeatDaily
+        case .weekly: .repeatWeekly
+        case .monthly: .repeatMonthly
         }
     }
 }

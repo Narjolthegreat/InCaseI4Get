@@ -26,6 +26,7 @@ struct InCaseI4GetApp: App {
         WindowGroup {
             HomeView()
                 .environment(settings)
+                .environment(\.locale, settings.language.locale)
         }
         .modelContainer(modelContainer)
     }

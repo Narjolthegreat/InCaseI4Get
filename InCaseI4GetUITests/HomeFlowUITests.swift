@@ -63,12 +63,14 @@ final class HomeFlowUITests: XCTestCase {
         titleField.typeText("Buy milk")
         dismissKeyboardIfNeeded()
         XCTAssertTrue(confirmButton.isEnabled)
+        keepScreenshot(named: "04-manual-filled")
         confirmButton.tap()
 
         XCTAssertTrue(
             app.staticTexts["Buy milk"].waitForExistence(timeout: 6),
             "Manual reminder was not created."
         )
+        keepScreenshot(named: "05-manual-created")
     }
 
     func test04VoiceFlowScreenshotsAndConfirmation() {
@@ -118,6 +120,7 @@ final class HomeFlowUITests: XCTestCase {
             app.staticTexts["Take medicine"].exists,
             "Voice reminder title was not preserved."
         )
+        keepScreenshot(named: "10-voice-created")
     }
 
     func test05ProUserCanChooseRepeatRule() {

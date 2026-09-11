@@ -8,6 +8,7 @@ enum ReminderVoiceKind: String {
 }
 
 enum ReminderVoiceStore {
+    @MainActor
     static func prepareSounds(for item: ReminderItem) async -> Bool {
         let language = AppLanguage.current
         let timeText = timeText(for: item.fireDate, language: language)
@@ -47,6 +48,7 @@ enum ReminderVoiceStore {
         return mainReady && earlyReady
     }
 
+    @MainActor
     static func prepareSnoozeSound(
         for item: ReminderItem,
         at date: Date
@@ -117,6 +119,7 @@ enum ReminderVoiceStore {
         return library.appendingPathComponent("Sounds", isDirectory: true)
     }
 
+    @MainActor
     private static func render(
         _ text: String,
         language: AppLanguage,
@@ -153,6 +156,7 @@ enum ReminderVoiceStore {
     }
 }
 
+@MainActor
 private final class SpeechRenderSession {
     private let outputURL: URL
     private let synthesizer = AVSpeechSynthesizer()
@@ -166,6 +170,12 @@ private final class SpeechRenderSession {
     }
 
     func render(text: String, language: AppLanguage) async -> Bool {
+        guard AVSpeechSynthesisVoice(
+            language: language.speechLocale
+        ) != nil else {
+            return false
+        }
+
         await withCheckedContinuation { continuation in
             self.continuation = continuation
 

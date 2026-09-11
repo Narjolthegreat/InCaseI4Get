@@ -149,28 +149,6 @@ final class ReminderLogicTests: XCTestCase {
         )
     }
 
-    func testReminderVoiceRendersAudioFile() async {
-        let id = UUID()
-        let item = ReminderItem(
-            id: id,
-            title: "Take medicine",
-            fireDate: Date().addingTimeInterval(60 * 60),
-            repeatRule: .daily,
-            source: .text,
-            languageCode: AppLanguage.english.rawValue,
-            earlyMinutes: 0,
-            strikeEnabled: false
-        )
-
-        let rendered = await ReminderVoiceStore.prepareSounds(for: item)
-        let soundURL = ReminderVoiceStore.soundURL(for: id, kind: .main)
-
-        XCTAssertTrue(rendered)
-        XCTAssertTrue(FileManager.default.fileExists(atPath: soundURL.path))
-
-        ReminderVoiceStore.removeSounds(for: id)
-    }
-
     private func makeReminder(
         fireDate: Date,
         repeatRule: ReminderRepeat

@@ -14,7 +14,6 @@
 		C10005C10005C10005C10005 /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20005C20005C20005C20005 /* SpeechService.swift */; };
 		C10006C10006C10006C10006 /* VoiceTranscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20006C20006C20006C20006 /* VoiceTranscriber.swift */; };
 		C10007C10007C10007C10007 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20007C20007C20007C20007 /* HomeView.swift */; };
-		C10008C10008C10008C10008 /* AddReminderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20008C20008C20008C20008 /* AddReminderView.swift */; };
 		C10009C10009C10009C10009 /* ReminderRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20009C20009C20009C20009 /* ReminderRowView.swift */; };
 		C10010C10010C10010C10010 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20010C20010C20010C20010 /* SettingsView.swift */; };
 		C10011C10011C10011C10011 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20011C20011C20011C20011 /* AppSettings.swift */; };
@@ -22,6 +21,11 @@
 		C10013C10013C10013C10013 /* PurchaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20014C20014C20014C20014 /* PurchaseManager.swift */; };
 		C10014C10014C10014C10014 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20015C20015C20015C20015 /* Localization.swift */; };
 		C10015C10015C10015C10015 /* ReminderVoiceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20016C20016C20016C20016 /* ReminderVoiceStore.swift */; };
+		C10016C10016C10016C10016 /* ReminderDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20017C20017C20017C20017 /* ReminderDraft.swift */; };
+		C10017C10017C10017C10017 /* ReminderParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20018C20018C20018C20018 /* ReminderParser.swift */; };
+		C10018C10018C10018C10018 /* ReminderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20019C20019C20019C20019 /* ReminderStore.swift */; };
+		C10019C10019C10019C10019 /* ReminderReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20020C20020C20020C20020 /* ReminderReviewView.swift */; };
+		C10020C10020C10020C10020 /* TextReminderInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20021C20021C20021C20021 /* TextReminderInputView.swift */; };
 		E10001E10001E10001E10001 /* ReminderLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20001E20001E20001E20001 /* ReminderLogicTests.swift */; };
 		E10002E10002E10002E10002 /* HomeFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20002E20002E20002E20002 /* HomeFlowUITests.swift */; };
 /* End PBXBuildFile section */
@@ -51,7 +55,6 @@
 		C20005C20005C20005C20005 /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
 		C20006C20006C20006C20006 /* VoiceTranscriber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceTranscriber.swift; sourceTree = "<group>"; };
 		C20007C20007C20007C20007 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		C20008C20008C20008C20008 /* AddReminderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReminderView.swift; sourceTree = "<group>"; };
 		C20009C20009C20009C20009 /* ReminderRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderRowView.swift; sourceTree = "<group>"; };
 		C20010C20010C20010C20010 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		C20011C20011C20011C20011 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
@@ -60,6 +63,11 @@
 		C20014C20014C20014C20014 /* PurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseManager.swift; sourceTree = "<group>"; };
 		C20015C20015C20015C20015 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		C20016C20016C20016C20016 /* ReminderVoiceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderVoiceStore.swift; sourceTree = "<group>"; };
+		C20017C20017C20017C20017 /* ReminderDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderDraft.swift; sourceTree = "<group>"; };
+		C20018C20018C20018C20018 /* ReminderParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderParser.swift; sourceTree = "<group>"; };
+		C20019C20019C20019C20019 /* ReminderStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderStore.swift; sourceTree = "<group>"; };
+		C20020C20020C20020C20020 /* ReminderReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderReviewView.swift; sourceTree = "<group>"; };
+		C20021C20021C20021C20021 /* TextReminderInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextReminderInputView.swift; sourceTree = "<group>"; };
 		C80001C80001C80001C80001 /* InCaseI4Get.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InCaseI4Get.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E20001E20001E20001E20001 /* ReminderLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderLogicTests.swift; sourceTree = "<group>"; };
 		E20002E20002E20002E20002 /* HomeFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeFlowUITests.swift; sourceTree = "<group>"; };
@@ -128,6 +136,7 @@
 			isa = PBXGroup;
 			children = (
 				C20003C20003C20003C20003 /* ReminderItem.swift */,
+				C20017C20017C20017C20017 /* ReminderDraft.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -140,6 +149,8 @@
 				C20006C20006C20006C20006 /* VoiceTranscriber.swift */,
 				C20014C20014C20014C20014 /* PurchaseManager.swift */,
 				C20016C20016C20016C20016 /* ReminderVoiceStore.swift */,
+				C20018C20018C20018C20018 /* ReminderParser.swift */,
+				C20019C20019C20019C20019 /* ReminderStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -159,8 +170,9 @@
 			children = (
 				C20010C20010C20010C20010 /* SettingsView.swift */,
 				C20007C20007C20007C20007 /* HomeView.swift */,
-				C20008C20008C20008C20008 /* AddReminderView.swift */,
 				C20009C20009C20009C20009 /* ReminderRowView.swift */,
+				C20020C20020C20020C20020 /* ReminderReviewView.swift */,
+				C20021C20021C20021C20021 /* TextReminderInputView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -319,7 +331,6 @@
 				C10005C10005C10005C10005 /* SpeechService.swift in Sources */,
 				C10006C10006C10006C10006 /* VoiceTranscriber.swift in Sources */,
 				C10007C10007C10007C10007 /* HomeView.swift in Sources */,
-				C10008C10008C10008C10008 /* AddReminderView.swift in Sources */,
 				C10009C10009C10009C10009 /* ReminderRowView.swift in Sources */,
 				C10010C10010C10010C10010 /* SettingsView.swift in Sources */,
 				C10011C10011C10011C10011 /* AppSettings.swift in Sources */,
@@ -327,6 +338,11 @@
 				C10013C10013C10013C10013 /* PurchaseManager.swift in Sources */,
 				C10014C10014C10014C10014 /* Localization.swift in Sources */,
 				C10015C10015C10015C10015 /* ReminderVoiceStore.swift in Sources */,
+				C10016C10016C10016C10016 /* ReminderDraft.swift in Sources */,
+				C10017C10017C10017C10017 /* ReminderParser.swift in Sources */,
+				C10018C10018C10018C10018 /* ReminderStore.swift in Sources */,
+				C10019C10019C10019C10019 /* ReminderReviewView.swift in Sources */,
+				C10020C10020C10020C10020 /* TextReminderInputView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

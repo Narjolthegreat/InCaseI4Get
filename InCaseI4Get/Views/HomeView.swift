@@ -5,18 +5,9 @@ import UIKit
 private enum VoiceCapturePhase {
     case listening
     case processing
-    case summarizing(title: String, fireDate: Date)
     case completed(title: String, fireDate: Date)
     case updated(title: String, fireDate: Date)
     case failed(String)
-}
-
-private struct ReminderDraft: Identifiable {
-    let id = UUID()
-    let title: String
-    let fireDate: Date
-    let repeatRule: ReminderRepeat
-    let source: ReminderSource
 }
 
 struct HomeView: View {
@@ -29,11 +20,16 @@ struct HomeView: View {
     @State private var presentedReminder: ReminderItem?
     @State private var voicePhase: VoiceCapturePhase?
     @State private var voiceDismissTask: Task<Void, Never>?
+    @State private var isShowingTextEntry = false
+    @State private var textInput = ""
     @State private var pendingReminderDraft: ReminderDraft?
+    @State private var isSavingReminder = false
+    @State private var saveErrorMessage: String?
     @State private var reminderActionTarget: ReminderItem?
     @State private var reminderBeingEdited: ReminderItem?
     @StateObject private var voiceRecorder = VoiceTranscriber()
     @StateObject private var purchaseManager = PurchaseManager()
+    private let reminderParser = ReminderParser()
 
     private var activeReminders: [ReminderItem] {
         reminders.filter { !$0.isCompleted && !$0.shouldBeRemoved(at: Date()) }
@@ -105,21 +101,28 @@ struct HomeView: View {
                 }
             }
             .overlay {
+                if isShowingTextEntry {
+                    TextReminderInputView(
+                        sentence: $textInput,
+                        onParse: parseTextReminder,
+                        onCancel: cancelTextReminder
+                    )
+                    .transition(.opacity)
+                }
+            }
+            .overlay {
                 if let pendingReminderDraft {
-                    ReminderConfirmationOverlay(
+                    ReminderReviewView(
                         draft: pendingReminderDraft,
                         purchaseManager: purchaseManager,
                         mode: .create,
+                        isSaving: isSavingReminder,
+                        saveErrorMessage: saveErrorMessage,
                         onCancel: {
-                            self.pendingReminderDraft = nil
+                            cancelReminderCreation()
                         },
-                        onConfirm: { title, fireDate, repeatRule in
-                            confirmReminder(
-                                pendingReminderDraft,
-                                title: title,
-                                fireDate: fireDate,
-                                repeatRule: repeatRule
-                            )
+                        onConfirm: { draft in
+                            saveReminder(draft)
                         }
                     )
                     .id(pendingReminderDraft.id)
@@ -131,6 +134,7 @@ struct HomeView: View {
                     ReminderActionPrompt(
                         onEdit: {
                             self.reminderActionTarget = nil
+                            saveErrorMessage = nil
                             reminderBeingEdited = reminderActionTarget
                         },
                         onDelete: {
@@ -146,24 +150,19 @@ struct HomeView: View {
             }
             .overlay {
                 if let reminderBeingEdited {
-                    ReminderConfirmationOverlay(
-                        draft: ReminderDraft(
-                            title: reminderBeingEdited.title,
-                            fireDate: reminderBeingEdited.fireDate,
-                            repeatRule: reminderBeingEdited.repeatRule,
-                            source: reminderBeingEdited.source
-                        ),
+                    ReminderReviewView(
+                        draft: ReminderDraft(reminder: reminderBeingEdited),
                         purchaseManager: purchaseManager,
                         mode: .edit,
+                        isSaving: isSavingReminder,
+                        saveErrorMessage: saveErrorMessage,
                         onCancel: {
-                            self.reminderBeingEdited = nil
+                            cancelReminderEdit()
                         },
-                        onConfirm: { title, fireDate, repeatRule in
-                            updateReminder(
+                        onConfirm: { draft in
+                            saveEditedReminder(
                                 reminderBeingEdited,
-                                title: title,
-                                fireDate: fireDate,
-                                repeatRule: repeatRule
+                                draft: draft
                             )
                         }
                     )
@@ -265,7 +264,7 @@ struct HomeView: View {
             )
 
             Button {
-                showManualReminderEntry()
+                showTextEntry()
             } label: {
                 Label(settings.language.text(.homeType), systemImage: "keyboard.fill")
                     .font(.body.weight(.semibold))
@@ -358,38 +357,34 @@ struct HomeView: View {
         }
     }
 
-    private func updateReminder(
+    private func saveEditedReminder(
         _ item: ReminderItem,
-        title: String,
-        fireDate: Date,
-        repeatRule: ReminderRepeat
+        draft: ReminderDraft
     ) {
-        reminderBeingEdited = nil
+        guard !isSavingReminder else { return }
+        isSavingReminder = true
+        saveErrorMessage = nil
 
         Task { @MainActor in
-            let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !cleanTitle.isEmpty else {
-                showVoiceResult(
-                    .failed(settings.language.text(.voiceErrorEmptyTitle)),
-                    duration: .seconds(2)
+            do {
+                _ = try await ReminderStore.update(
+                    item,
+                    from: draft,
+                    in: modelContext
                 )
-                return
+                reminderBeingEdited = nil
+                isSavingReminder = false
+                showVoiceResult(
+                    .updated(
+                        title: draft.trimmedTitle,
+                        fireDate: draft.fireDate ?? item.fireDate
+                    ),
+                    duration: .seconds(1.6)
+                )
+            } catch {
+                isSavingReminder = false
+                saveErrorMessage = message(for: error)
             }
-
-            await NotificationScheduler.cancel(item)
-            item.title = cleanTitle
-            item.fireDate = fireDate
-            item.repeatRule = repeatRule
-            item.repeatEndDate = repeatRule == .once
-                ? nil
-                : Calendar.current.date(byAdding: .day, value: 7, to: fireDate)
-            try? modelContext.save()
-            await NotificationScheduler.schedule(item)
-
-            showVoiceResult(
-                .updated(title: cleanTitle, fireDate: fireDate),
-                duration: .seconds(1.6)
-            )
         }
     }
 
@@ -425,29 +420,16 @@ struct HomeView: View {
                 return
             }
 
-            let parsed = ReminderSentenceParser.parse(trimmed)
-            guard let fireDate = parsed.fireDate else {
-                showVoiceResult(
-                    .failed(settings.language.text(.voiceErrorNoTime)),
-                    duration: .seconds(2.5)
-                )
-                return
-            }
-
             voiceDismissTask?.cancel()
-            voicePhase = .processing
-            try? await Task.sleep(for: .milliseconds(1_500))
-
-            voicePhase = .summarizing(title: parsed.title, fireDate: fireDate)
-            try? await Task.sleep(for: .milliseconds(1_500))
-
             voicePhase = nil
-            pendingReminderDraft = ReminderDraft(
-                title: parsed.title,
-                fireDate: max(fireDate, Date().addingTimeInterval(60)),
-                repeatRule: parsed.repeatRule,
-                source: .voice
+            pendingReminderDraft = reminderParser.makeDraft(
+                from: trimmed,
+                source: .voice,
+                language: settings.language,
+                earlyMinutes: settings.earlyMinutes,
+                strikeEnabled: settings.strikeEnabled
             )
+            saveErrorMessage = nil
         }
     }
 
@@ -457,69 +439,88 @@ struct HomeView: View {
         }
     }
 
-    private func showManualReminderEntry() {
+    private func showTextEntry() {
         voiceDismissTask?.cancel()
         voicePhase = nil
-        pendingReminderDraft = ReminderDraft(
-            title: "",
-            fireDate: Calendar.current.date(
-                byAdding: .minute,
-                value: 5,
-                to: Date()
-            ) ?? Date().addingTimeInterval(300),
-            repeatRule: .once,
-            source: .text
-        )
+        textInput = ""
+        isShowingTextEntry = true
+        saveErrorMessage = nil
     }
 
-    private func confirmReminder(
-        _ draft: ReminderDraft,
-        title: String,
-        fireDate: Date,
-        repeatRule: ReminderRepeat
-    ) {
-        pendingReminderDraft = nil
+    private func parseTextReminder() {
+        let trimmed = textInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        pendingReminderDraft = reminderParser.makeDraft(
+            from: trimmed,
+            source: .text,
+            language: settings.language,
+            earlyMinutes: settings.earlyMinutes,
+            strikeEnabled: settings.strikeEnabled
+        )
+        textInput = ""
+        isShowingTextEntry = false
+        saveErrorMessage = nil
+    }
+
+    private func cancelTextReminder() {
+        textInput = ""
+        isShowingTextEntry = false
+    }
+
+    private func saveReminder(_ draft: ReminderDraft) {
+        guard !isSavingReminder else { return }
+        isSavingReminder = true
+        saveErrorMessage = nil
 
         Task { @MainActor in
-            let granted = await NotificationScheduler.ensureAuthorization()
-            guard granted else {
-                showVoiceResult(
-                    .failed(settings.language.text(.voiceErrorPermission)),
-                    duration: .seconds(2.5)
+            do {
+                _ = try await ReminderStore.create(
+                    from: draft,
+                    in: modelContext
                 )
-                return
-            }
-
-            let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !cleanTitle.isEmpty else {
+                pendingReminderDraft = nil
+                isSavingReminder = false
                 showVoiceResult(
-                    .failed(settings.language.text(.voiceErrorEmptyTitle)),
-                    duration: .seconds(2)
+                    .completed(
+                        title: draft.trimmedTitle,
+                        fireDate: draft.fireDate ?? Date()
+                    ),
+                    duration: .seconds(1.6)
                 )
-                return
+            } catch {
+                isSavingReminder = false
+                saveErrorMessage = message(for: error)
             }
+        }
+    }
 
-            let effectiveEndDate = repeatRule == .once
-                ? nil
-                : Calendar.current.date(byAdding: .day, value: 7, to: fireDate)
-            let item = ReminderItem(
-                title: cleanTitle,
-                fireDate: fireDate,
-                repeatRule: repeatRule,
-                repeatEndDate: effectiveEndDate,
-                source: draft.source,
-                languageCode: settings.language.rawValue,
-                earlyMinutes: settings.earlyMinutes,
-                strikeEnabled: settings.strikeEnabled
-            )
-            modelContext.insert(item)
-            try? modelContext.save()
-            await NotificationScheduler.schedule(item)
+    private func cancelReminderCreation() {
+        guard !isSavingReminder else { return }
+        pendingReminderDraft = nil
+        saveErrorMessage = nil
+    }
 
-            showVoiceResult(
-                .completed(title: cleanTitle, fireDate: fireDate),
-                duration: .seconds(1.6)
-            )
+    private func cancelReminderEdit() {
+        guard !isSavingReminder else { return }
+        reminderBeingEdited = nil
+        saveErrorMessage = nil
+    }
+
+    private func message(for error: Error) -> String {
+        guard let storeError = error as? ReminderStoreError else {
+            return settings.language.text(.voiceFailed)
+        }
+
+        switch storeError {
+        case .notificationPermissionDenied:
+            return settings.language.text(.voiceErrorPermission)
+        case .emptyTitle:
+            return settings.language.text(.voiceErrorEmptyTitle)
+        case .missingDate:
+            return settings.language.text(.voiceErrorNoTime)
+        case .persistenceFailed:
+            return settings.language.text(.voiceFailed)
         }
     }
 
@@ -537,338 +538,6 @@ struct HomeView: View {
 
 }
 
-private struct ReminderConfirmationOverlay: View {
-    enum Mode {
-        case create
-        case edit
-
-        var accessibilityIdentifier: String {
-            switch self {
-            case .create:
-                "ConfirmCreateReminderButton"
-            case .edit:
-                "SaveEditedReminderButton"
-            }
-        }
-    }
-
-    @Environment(AppSettings.self) private var settings
-
-    let draft: ReminderDraft
-    @ObservedObject var purchaseManager: PurchaseManager
-    let mode: Mode
-    let onCancel: () -> Void
-    let onConfirm: (String, Date, ReminderRepeat) -> Void
-
-    @State private var title: String
-    @State private var fireDate: Date
-    @State private var repeatRule: ReminderRepeat
-    @State private var selectedLockedRule: ReminderRepeat?
-    @State private var showsPaywall = false
-    @FocusState private var isTitleFocused: Bool
-
-    init(
-        draft: ReminderDraft,
-        purchaseManager: PurchaseManager,
-        mode: Mode,
-        onCancel: @escaping () -> Void,
-        onConfirm: @escaping (String, Date, ReminderRepeat) -> Void
-    ) {
-        self.draft = draft
-        self.purchaseManager = purchaseManager
-        self.mode = mode
-        self.onCancel = onCancel
-        self.onConfirm = onConfirm
-        _title = State(initialValue: draft.title)
-        _fireDate = State(initialValue: max(draft.fireDate, Date().addingTimeInterval(60)))
-        _repeatRule = State(initialValue: draft.repeatRule)
-    }
-
-    private var trimmedTitle: String {
-        title.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private var repeatRequiresPro: Bool {
-        repeatRule != .once && !purchaseManager.isPro
-    }
-
-    private var canCreate: Bool {
-        !trimmedTitle.isEmpty && !repeatRequiresPro
-    }
-
-    var body: some View {
-        GeometryReader { proxy in
-            let minimumCardHeight = proxy.size.height * 0.46
-
-            ZStack {
-                Color.black.opacity(0.28)
-                    .ignoresSafeArea()
-
-                VStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(settings.language.text(.confirmationTask))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        TextField(
-                            settings.language.text(.confirmationTitlePlaceholder),
-                            text: $title,
-                            axis: .vertical
-                        )
-                            .lineLimit(1...2)
-                            .focused($isTitleFocused)
-                            .accessibilityIdentifier("VoiceReminderTitleField")
-                    }
-                    .padding(12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        Color(.secondarySystemBackground),
-                        in: RoundedRectangle(cornerRadius: 8)
-                    )
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(settings.language.text(.confirmationReminderTime))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        HStack(spacing: 8) {
-                            DatePicker(
-                                settings.language.text(.confirmationReminderTime),
-                                selection: $fireDate,
-                                in: Date()...,
-                                displayedComponents: [.date, .hourAndMinute]
-                            )
-                            .labelsHidden()
-                            .accessibilityIdentifier("VoiceReminderDatePicker")
-
-                            Text(
-                                fireDate.formatted(
-                                    .dateTime.weekday(.wide)
-                                )
-                            )
-                            .font(.subheadline.bold())
-                            .foregroundStyle(.secondary)
-                            .accessibilityIdentifier("VoiceReminderWeekday")
-                        }
-                    }
-                    .padding(12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        Color(.secondarySystemBackground),
-                        in: RoundedRectangle(cornerRadius: 8)
-                    )
-
-                    repeatBox
-
-                    HStack(spacing: 20) {
-                        Button(settings.language.text(.commonCancel)) {
-                            onCancel()
-                        }
-                        .font(.headline.bold())
-                        .frame(width: 132, height: 46)
-                        .background(
-                            Color.red,
-                            in: RoundedRectangle(cornerRadius: 8)
-                        )
-                        .foregroundStyle(.white)
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("CancelVoiceReminderButton")
-
-                        Button(
-                            mode == .create
-                                ? settings.language.text(.commonCreate)
-                                : settings.language.text(.commonSave)
-                        ) {
-                            onConfirm(trimmedTitle, fireDate, repeatRule)
-                        }
-                        .font(.headline.bold())
-                        .frame(width: 132, height: 46)
-                        .background(
-                            Color.green,
-                            in: RoundedRectangle(cornerRadius: 8)
-                        )
-                        .foregroundStyle(.white)
-                        .buttonStyle(.plain)
-                        .disabled(!canCreate)
-                        .opacity(canCreate ? 1 : 0.5)
-                        .accessibilityIdentifier(mode.accessibilityIdentifier)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .padding(18)
-                .frame(width: min(proxy.size.width - 24, 420))
-                .frame(minHeight: minimumCardHeight)
-                .background(
-                    .regularMaterial,
-                    in: RoundedRectangle(cornerRadius: 8)
-                )
-                .position(
-                    x: proxy.size.width / 2,
-                    y: proxy.size.height * 0.58
-                )
-
-                if showsPaywall {
-                    RepeatReminderProPaywallView(
-                        purchaseManager: purchaseManager,
-                        onPurchased: {
-                            if let selectedLockedRule {
-                                repeatRule = selectedLockedRule
-                            }
-                        },
-                        onClose: {
-                            showsPaywall = false
-                        }
-                    )
-                    .transition(.opacity)
-                }
-            }
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("VoiceReminderConfirmation")
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button(settings.language.text(.commonDone)) {
-                        isTitleFocused = false
-                    }
-                    .accessibilityIdentifier("DismissReminderKeyboardButton")
-                }
-            }
-        }
-    }
-
-    private var repeatBox: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(settings.language.text(.confirmationRepeat))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            if purchaseManager.isPro {
-                Menu {
-                    ForEach(ReminderRepeat.allCases) { rule in
-                        Button(settings.language.text(rule.localizationKey)) {
-                            repeatRule = rule
-                        }
-                    }
-                } label: {
-                    HStack {
-                        Text(settings.language.text(repeatRule.localizationKey))
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .accessibilityIdentifier("VoiceReminderRepeatMenu")
-            } else {
-                Button {
-                    selectedLockedRule = repeatRule == .once ? .daily : repeatRule
-                    showsPaywall = true
-                } label: {
-                    HStack {
-                        Text(settings.language.text(repeatRule.localizationKey))
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        Image(systemName: "lock.fill")
-                            .foregroundStyle(.orange)
-                    }
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("VoiceReminderRepeatButton")
-            }
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            Color(.secondarySystemBackground),
-            in: RoundedRectangle(cornerRadius: 8)
-        )
-    }
-}
-
-private struct RepeatReminderProPaywallView: View {
-    @Environment(AppSettings.self) private var settings
-
-    @ObservedObject var purchaseManager: PurchaseManager
-    let onPurchased: () -> Void
-    let onClose: () -> Void
-
-    var body: some View {
-        ZStack {
-            Color.black.opacity(0.42)
-                .ignoresSafeArea()
-
-            VStack(spacing: 18) {
-                Image(systemName: "repeat.circle.fill")
-                    .font(.system(size: 48))
-                    .foregroundStyle(.orange)
-
-                Text(settings.language.text(.paywallTitle))
-                    .font(.title2.bold())
-                    .multilineTextAlignment(.center)
-
-                Text(settings.language.text(.paywallDescription))
-                    .font(.body)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(.secondary)
-
-                Button {
-                    Task {
-                        if await purchaseManager.purchasePro() {
-                            onPurchased()
-                            onClose()
-                        }
-                    }
-                } label: {
-                    Text(purchaseLabel)
-                        .font(.headline.bold())
-                        .frame(maxWidth: .infinity, minHeight: 50)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.orange)
-                .disabled(purchaseManager.isPurchasing)
-                .accessibilityIdentifier("PurchaseRepeatProButton")
-
-                Button(settings.language.text(.paywallRestore)) {
-                    Task {
-                        if await purchaseManager.restorePurchases() {
-                            onPurchased()
-                            onClose()
-                        }
-                    }
-                }
-                .disabled(purchaseManager.isPurchasing)
-                .accessibilityIdentifier("RestoreRepeatProButton")
-
-                if let errorMessage = purchaseManager.errorMessage {
-                    Text(errorMessage)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .multilineTextAlignment(.center)
-                }
-
-                Button(settings.language.text(.paywallClose)) {
-                    onClose()
-                }
-                .accessibilityIdentifier("ClosePaywallButton")
-            }
-            .padding(24)
-            .frame(maxWidth: 340)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("RepeatProPaywall")
-    }
-
-    private var purchaseLabel: String {
-        if let product = purchaseManager.product {
-            return settings.language.format(
-                .paywallUnlockPrice,
-                product.displayPrice
-            )
-        }
-        return settings.language.text(.paywallUnlockForever)
-    }
-}
-
 private struct VoiceCaptureOverlay: View {
     @Environment(AppSettings.self) private var settings
 
@@ -878,7 +547,7 @@ private struct VoiceCaptureOverlay: View {
 
     private var isListening: Bool {
         switch phase {
-        case .listening, .processing, .summarizing:
+        case .listening, .processing:
             return true
         default:
             return false
@@ -918,8 +587,6 @@ private struct VoiceCaptureOverlay: View {
             settings.language.text(.voiceListening)
         case .processing:
             settings.language.text(.voiceProcessing)
-        case .summarizing:
-            settings.language.text(.voiceSummarizing)
         case .completed:
             settings.language.text(.voiceCreated)
         case .updated:
@@ -939,8 +606,6 @@ private struct VoiceCaptureOverlay: View {
             transcript.isEmpty
                 ? settings.language.text(.voiceProcessingHint)
                 : transcript
-        case .summarizing(let title, let fireDate):
-            "\(title) · \(fireDate.formatted(date: .abbreviated, time: .shortened))"
         case .completed(let title, let fireDate):
             "\(title) · \(fireDate.formatted(date: .abbreviated, time: .shortened))"
         case .updated(let title, let fireDate):

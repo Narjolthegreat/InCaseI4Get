@@ -24,11 +24,16 @@ enum ReminderVoiceStore {
             timeText,
             title
         )
+        let mainFingerprint = "\(language.rawValue)|\(mainText)"
         let mainReady: Bool
-        if FileManager.default.fileExists(atPath: mainURL.path) {
+        if hasCurrentSound(at: mainURL, fingerprint: mainFingerprint) {
             mainReady = true
         } else {
-            mainReady = await render(mainText, language: language, to: mainURL)
+            mainReady = await render(
+                mainText,
+                language: language,
+                to: mainURL
+            ) && writeFingerprint(mainFingerprint, for: mainURL)
         }
 
         guard item.earlyMinutes > 0 else {
@@ -42,11 +47,16 @@ enum ReminderVoiceStore {
             title
         )
         let earlyURL = soundURL(for: item.id, kind: .early)
+        let earlyFingerprint = "\(language.rawValue)|\(earlyText)"
         let earlyReady: Bool
-        if FileManager.default.fileExists(atPath: earlyURL.path) {
+        if hasCurrentSound(at: earlyURL, fingerprint: earlyFingerprint) {
             earlyReady = true
         } else {
-            earlyReady = await render(earlyText, language: language, to: earlyURL)
+            earlyReady = await render(
+                earlyText,
+                language: language,
+                to: earlyURL
+            ) && writeFingerprint(earlyFingerprint, for: earlyURL)
         }
 
         return mainReady && earlyReady
@@ -69,7 +79,11 @@ enum ReminderVoiceStore {
         )
         let url = soundURL(for: item.id, kind: .snooze)
 
+        let fingerprint = "\(language.rawValue)|\(text)"
         guard await render(text, language: language, to: url) else {
+            return nil
+        }
+        guard writeFingerprint(fingerprint, for: url) else {
             return nil
         }
 
@@ -100,7 +114,9 @@ enum ReminderVoiceStore {
 
     static func removeSounds(for id: UUID) {
         for kind in [ReminderVoiceKind.main, .early, .snooze] {
-            try? FileManager.default.removeItem(at: soundURL(for: id, kind: kind))
+            let url = soundURL(for: id, kind: kind)
+            try? FileManager.default.removeItem(at: url)
+            try? FileManager.default.removeItem(at: fingerprintURL(for: url))
         }
     }
 
@@ -125,6 +141,40 @@ enum ReminderVoiceStore {
             in: .userDomainMask
         )[0]
         return library.appendingPathComponent("Sounds", isDirectory: true)
+    }
+
+    private static func hasCurrentSound(
+        at url: URL,
+        fingerprint: String
+    ) -> Bool {
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return false
+        }
+        let stored = try? String(
+            contentsOf: fingerprintURL(for: url),
+            encoding: .utf8
+        )
+        return stored == fingerprint
+    }
+
+    private static func writeFingerprint(
+        _ fingerprint: String,
+        for url: URL
+    ) -> Bool {
+        do {
+            try fingerprint.write(
+                to: fingerprintURL(for: url),
+                atomically: true,
+                encoding: .utf8
+            )
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    private static func fingerprintURL(for soundURL: URL) -> URL {
+        soundURL.appendingPathExtension("fingerprint")
     }
 
     @MainActor

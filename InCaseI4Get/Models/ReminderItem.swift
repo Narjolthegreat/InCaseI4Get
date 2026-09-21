@@ -19,7 +19,7 @@ enum ReminderRepeat: String, CaseIterable, Identifiable {
     }
 }
 
-enum ReminderSource: String {
+enum ReminderSource: String, Equatable {
     case voice
     case text
 }
@@ -200,124 +200,5 @@ final class ReminderItem: Identifiable {
     private func complete(now: Date) {
         isCompleted = true
         completedAt = now
-    }
-}
-
-struct ReminderSentenceParser {
-    struct Result {
-        var title: String
-        var fireDate: Date?
-        var repeatRule: ReminderRepeat
-    }
-
-    private static let repeatExpressions: [ReminderRepeat: [String]] = [
-        .daily: [
-            "daily", "every day", "everyday", "each day",
-            "毎日", "每日", "每天",
-            "매일",
-            "tous les jours", "quotidien", "chaque jour",
-            "täglich", "jeden tag",
-            "her gün", "günlük",
-            "todos los días", "diario", "cada día",
-            "todos os dias", "diário", "cada dia",
-            "каждый день", "ежедневно"
-        ],
-        .weekly: [
-            "weekly", "every week", "each week",
-            "毎週", "每周",
-            "매주",
-            "chaque semaine", "hebdomadaire",
-            "wöchentlich", "jede woche",
-            "her hafta", "haftalık",
-            "todas las semanas", "semanal",
-            "todas as semanas", "semanal",
-            "каждую неделю", "еженедельно"
-        ],
-        .monthly: [
-            "monthly", "every month", "each month",
-            "毎月", "每月",
-            "매달", "매월",
-            "chaque mois", "mensuel",
-            "monatlich", "jeden monat",
-            "her ay", "aylık",
-            "todos los meses", "mensual",
-            "todos os meses", "mensal",
-            "каждый месяц", "ежемесячно"
-        ]
-    ]
-
-    static func parse(_ input: String) -> Result {
-        let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        var mutable = text as NSString
-        var repeatRule: ReminderRepeat = .once
-        var fireDate: Date?
-
-        for (rule, expressions) in repeatExpressions {
-            for expression in expressions {
-                let range = mutable.range(of: expression, options: .caseInsensitive)
-                guard range.location != NSNotFound,
-                      NSMaxRange(range) <= mutable.length else {
-                    continue
-                }
-                mutable = mutable.replacingCharacters(in: range, with: " ") as NSString
-                repeatRule = rule
-                break
-            }
-        }
-
-        let dateResult = detectDate(in: text)
-        if let matchedDate = dateResult.date {
-            fireDate = matchedDate
-            if let range = dateResult.range,
-               range.location != NSNotFound,
-               NSMaxRange(range) <= mutable.length {
-                var removalRange = range
-                let prefixRange = NSRange(location: 0, length: range.location)
-                let prefix = mutable.substring(with: prefixRange) as NSString
-                let prepositionRange = prefix.range(
-                    of: #"\b(?:on|at|by)\s+$"#,
-                    options: [.regularExpression, .caseInsensitive]
-                )
-
-                if prepositionRange.location != NSNotFound {
-                    removalRange = NSRange(
-                        location: prepositionRange.location,
-                        length: NSMaxRange(range) - prepositionRange.location
-                    )
-                }
-
-                mutable = mutable.replacingCharacters(in: removalRange, with: " ") as NSString
-            }
-        }
-
-        var title = mutable as String
-        title = title
-            .replacingOccurrences(of: " at ", with: " ")
-            .replacingOccurrences(
-                of: #"\s+"#,
-                with: " ",
-                options: .regularExpression
-            )
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if title.isEmpty {
-            title = text
-        }
-
-        return Result(title: title, fireDate: fireDate, repeatRule: repeatRule)
-    }
-
-    private static func detectDate(in text: String) -> (date: Date?, range: NSRange?) {
-        let types: NSTextCheckingResult.CheckingType = [.date]
-        guard let detector = try? NSDataDetector(types: types.rawValue) else {
-            return (nil, nil)
-        }
-
-        let range = NSRange(location: 0, length: (text as NSString).length)
-        let matches = detector.matches(in: text, options: [], range: range)
-        guard let match = matches.first else {
-            return (nil, nil)
-        }
-        return (match.date, match.range)
     }
 }

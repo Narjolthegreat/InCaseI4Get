@@ -32,6 +32,57 @@ final class ReminderLogicTests: XCTestCase {
         XCTAssertNotNil(result.fireDate)
     }
 
+    func testSentenceParserRemovesRepeatBeforeDateWithoutCorruptingText() {
+        let result = ReminderSentenceParser.parse(
+            "Take medicine every day at 8:00 PM"
+        )
+
+        XCTAssertEqual(result.repeatRule, .daily)
+        XCTAssertEqual(result.title, "Take medicine")
+        XCTAssertNotNil(result.fireDate)
+    }
+
+    func testTextAndVoiceDraftsUseTheSameParsingResult() {
+        let parser = ReminderParser()
+        let input = "Take medicine on January 1, 2030 at 8:00 PM"
+        let textDraft = parser.makeDraft(
+            from: input,
+            source: .text,
+            language: .english,
+            earlyMinutes: 5,
+            strikeEnabled: true
+        )
+        let voiceDraft = parser.makeDraft(
+            from: input,
+            source: .voice,
+            language: .english,
+            earlyMinutes: 5,
+            strikeEnabled: true
+        )
+
+        XCTAssertEqual(textDraft.title, voiceDraft.title)
+        XCTAssertEqual(textDraft.fireDate, voiceDraft.fireDate)
+        XCTAssertEqual(textDraft.repeatRule, voiceDraft.repeatRule)
+        XCTAssertEqual(textDraft.parseStatus, voiceDraft.parseStatus)
+        XCTAssertEqual(textDraft.source, .text)
+        XCTAssertEqual(voiceDraft.source, .voice)
+    }
+
+    func testDraftWithoutTimeIsPartialInsteadOfGuessing() {
+        let draft = ReminderParser().makeDraft(
+            from: "Buy milk",
+            source: .text,
+            language: .english,
+            earlyMinutes: 5,
+            strikeEnabled: true
+        )
+
+        XCTAssertEqual(draft.title, "Buy milk")
+        XCTAssertNil(draft.fireDate)
+        XCTAssertEqual(draft.parseStatus, .partial)
+        XCTAssertFalse(draft.canSave)
+    }
+
     func testDailyReminderAdvancesToNextDay() {
         let start = makeDate(year: 2026, month: 1, day: 1, hour: 9, minute: 0)
         let now = makeDate(year: 2026, month: 1, day: 1, hour: 9, minute: 1)

@@ -24,23 +24,33 @@ enum NotificationScheduler {
         }
     }
 
-    static func schedule(_ item: ReminderItem) async {
+    static func schedule(_ item: ReminderItem) async throws {
         guard !item.isCompleted, !item.shouldBeRemoved(at: Date()) else { return }
 
-        _ = await ReminderVoiceStore.prepareSounds(for: item)
+        let customSoundsAvailable = await ReminderVoiceStore.prepareSounds(for: item)
 
         let center = UNUserNotificationCenter.current()
-        let requests = makeRequests(for: item)
-        let requestIdentifiers = requests.map(\.identifier)
+        let requests = makeRequests(
+            for: item,
+            useCustomSounds: customSoundsAvailable
+        )
+        let basePrefix = item.id.uuidString
+        let pending = await center.pendingNotificationRequests()
+        let staleIdentifiers = pending
+            .map(\.identifier)
+            .filter {
+                $0.hasPrefix(basePrefix)
+                    && !$0.hasSuffix(".snooze")
+            }
 
-        if !requestIdentifiers.isEmpty {
+        if !staleIdentifiers.isEmpty {
             center.removePendingNotificationRequests(
-                withIdentifiers: requestIdentifiers
+                withIdentifiers: staleIdentifiers
             )
         }
 
         for request in requests {
-            try? await center.add(request)
+            try await center.add(request)
         }
     }
 
@@ -51,11 +61,19 @@ enum NotificationScheduler {
         let identifiers = pending
             .map(\.identifier)
             .filter { $0.hasPrefix(basePrefix) }
+        let delivered = await center.deliveredNotifications()
+        let deliveredIdentifiers = delivered
+            .map(\.request.identifier)
+            .filter { $0.hasPrefix(basePrefix) }
 
         if !identifiers.isEmpty {
             center.removePendingNotificationRequests(withIdentifiers: identifiers)
         }
-        center.removeDeliveredNotifications(withIdentifiers: identifiers)
+        if !deliveredIdentifiers.isEmpty {
+            center.removeDeliveredNotifications(
+                withIdentifiers: deliveredIdentifiers
+            )
+        }
         ReminderVoiceStore.removeSounds(for: item)
     }
 
@@ -63,7 +81,7 @@ enum NotificationScheduler {
         await cancel(item)
         item.advanceAfterAcknowledgment()
         if !item.isCompleted {
-            await schedule(item)
+            try? await schedule(item)
         }
     }
 
@@ -91,37 +109,62 @@ enum NotificationScheduler {
         try? await center.add(request)
     }
 
-    static func reschedule(_ reminders: [ReminderItem]) async {
+    @discardableResult
+    static func reschedule(_ reminders: [ReminderItem]) async -> [Error] {
+        var failures: [Error] = []
         for item in reminders where !item.isCompleted {
-            await schedule(item)
+            do {
+                try await schedule(item)
+            } catch {
+                failures.append(error)
+            }
         }
+        return failures
     }
 
-    private static func makeRequests(for item: ReminderItem) -> [UNNotificationRequest] {
+    private static func makeRequests(
+        for item: ReminderItem,
+        useCustomSounds: Bool
+    ) -> [UNNotificationRequest] {
         let now = Date()
         let baseID = item.id.uuidString
 
         if item.repeatRule == .once {
-            return oneTimeRequests(for: item, baseID: baseID)
+            return oneTimeRequests(
+                for: item,
+                baseID: baseID,
+                useCustomSounds: useCustomSounds
+            )
         }
 
         if let endDate = item.repeatEndDate {
-            return finiteRepeatRequests(for: item, endDate: endDate, baseID: baseID, now: now)
+            return finiteRepeatRequests(
+                for: item,
+                endDate: endDate,
+                baseID: baseID,
+                now: now,
+                useCustomSounds: useCustomSounds
+            )
         }
 
-        return openRepeatRequests(for: item, baseID: baseID, now: now)
+        return openRepeatRequests(
+            for: item,
+            baseID: baseID,
+            now: now,
+            useCustomSounds: useCustomSounds
+        )
     }
 
     private static func oneTimeRequests(
         for item: ReminderItem,
-        baseID: String
+        baseID: String,
+        useCustomSounds: Bool
     ) -> [UNNotificationRequest] {
         var requests: [UNNotificationRequest] = []
         let now = Date()
-        let mainSoundName = ReminderVoiceStore.soundName(
-            for: item.id,
-            kind: .main
-        )
+        let mainSoundName: String? = useCustomSounds
+            ? ReminderVoiceStore.soundName(for: item.id, kind: .main)
+            : nil
 
         if item.earlyMinutes > 0 {
             let earlyDate = item.fireDate.addingTimeInterval(TimeInterval(-item.earlyMinutes * 60))
@@ -136,10 +179,12 @@ enum NotificationScheduler {
                         ),
                         userInfo: reminderUserInfo(for: item),
                         fireDate: earlyDate,
-                        soundName: ReminderVoiceStore.soundName(
-                            for: item.id,
-                            kind: .early
-                        )
+                        soundName: useCustomSounds
+                            ? ReminderVoiceStore.soundName(
+                                for: item.id,
+                                kind: .early
+                            )
+                            : nil
                     )
                 )
             }
@@ -191,15 +236,15 @@ enum NotificationScheduler {
         for item: ReminderItem,
         endDate: Date,
         baseID: String,
-        now: Date
+        now: Date,
+        useCustomSounds: Bool
     ) -> [UNNotificationRequest] {
         let endBoundary = ReminderItem.endOfLocalDay(for: endDate)
         var occurrences: [Date] = []
         var cursor = item.fireDate
-        let soundName = ReminderVoiceStore.soundName(
-            for: item.id,
-            kind: .main
-        )
+        let soundName: String? = useCustomSounds
+            ? ReminderVoiceStore.soundName(for: item.id, kind: .main)
+            : nil
 
         while occurrences.count < 60 {
             if cursor > endBoundary {
@@ -226,7 +271,8 @@ enum NotificationScheduler {
     private static func openRepeatRequests(
         for item: ReminderItem,
         baseID: String,
-        now: Date
+        now: Date,
+        useCustomSounds: Bool
     ) -> [UNNotificationRequest] {
         var baseDate = item.fireDate
         if baseDate < now {
@@ -240,10 +286,9 @@ enum NotificationScheduler {
         let content = makeContent(
             for: item,
             body: item.title,
-            soundName: ReminderVoiceStore.soundName(
-                for: item.id,
-                kind: .main
-            )
+            soundName: useCustomSounds
+                ? ReminderVoiceStore.soundName(for: item.id, kind: .main)
+                : nil
         )
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
         let request = UNNotificationRequest(identifier: baseID, content: content, trigger: trigger)

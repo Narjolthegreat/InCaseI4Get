@@ -47,21 +47,32 @@ final class HomeFlowUITests: XCTestCase {
         XCTAssertTrue(typeButton.waitForExistence(timeout: 5))
         typeButton.tap()
 
+        let sentenceField = app.textFields["TextReminderSentenceField"]
+        let parseButton = app.buttons["ParseTextReminderButton"]
+        XCTAssertTrue(
+            sentenceField.waitForExistence(timeout: 5),
+            "Text reminder sentence entry did not appear."
+        )
+        XCTAssertTrue(app.buttons["CancelTextReminderButton"].exists)
+        XCTAssertFalse(parseButton.isEnabled)
+
+        keepScreenshot(named: "03-manual-entry")
+
+        sentenceField.tap()
+        sentenceField.typeText(
+            "Buy milk on January 1, 2030 at 8:00 PM"
+        )
+        dismissKeyboardIfNeeded()
+        XCTAssertTrue(parseButton.isEnabled)
+        parseButton.tap()
+
         let titleField = app.textFields["VoiceReminderTitleField"]
         let confirmButton = app.buttons["ConfirmCreateReminderButton"]
         XCTAssertTrue(
             confirmButton.waitForExistence(timeout: 5),
-            "Manual reminder confirmation did not appear."
+            "Parsed reminder confirmation did not appear."
         )
-        XCTAssertTrue(app.buttons["CancelVoiceReminderButton"].exists)
-        XCTAssertTrue(titleField.exists)
-        XCTAssertFalse(confirmButton.isEnabled)
-
-        keepScreenshot(named: "03-manual-entry")
-
-        titleField.tap()
-        titleField.typeText("Buy milk")
-        dismissKeyboardIfNeeded()
+        XCTAssertEqual(titleField.value as? String, "Buy milk")
         XCTAssertTrue(confirmButton.isEnabled)
         keepScreenshot(named: "04-manual-filled")
         confirmButton.tap()
@@ -79,18 +90,6 @@ final class HomeFlowUITests: XCTestCase {
         let speakButton = app.buttons["HomeSpeakButton"]
         XCTAssertTrue(speakButton.waitForExistence(timeout: 5))
         speakButton.press(forDuration: 0.8)
-
-        XCTAssertTrue(
-            app.staticTexts["Converting to text"].waitForExistence(timeout: 3),
-            "Voice transcription stage did not appear."
-        )
-        keepScreenshot(named: "05-voice-transcript")
-
-        XCTAssertTrue(
-            app.staticTexts["Summarizing task"].waitForExistence(timeout: 4),
-            "Voice summary stage did not appear."
-        )
-        keepScreenshot(named: "06-voice-summary")
 
         let confirmButton = app.buttons["ConfirmCreateReminderButton"]
         XCTAssertTrue(
@@ -152,11 +151,21 @@ final class HomeFlowUITests: XCTestCase {
 
         app.buttons["HomeTypeButton"].tap()
 
+        let sentenceField = app.textFields["TextReminderSentenceField"]
+        XCTAssertTrue(sentenceField.waitForExistence(timeout: 5))
+        sentenceField.tap()
+        sentenceField.typeText(
+            "Call mom on January 1, 2030 at 8:00 PM"
+        )
+        dismissKeyboardIfNeeded()
+
+        let parseButton = app.buttons["ParseTextReminderButton"]
+        XCTAssertTrue(parseButton.isEnabled)
+        parseButton.tap()
+
         let titleField = app.textFields["VoiceReminderTitleField"]
         XCTAssertTrue(titleField.waitForExistence(timeout: 5))
-        titleField.tap()
-        titleField.typeText("Call mom")
-        dismissKeyboardIfNeeded()
+        XCTAssertEqual(titleField.value as? String, "Call mom")
 
         let createButton = app.buttons["ConfirmCreateReminderButton"]
         XCTAssertTrue(createButton.isEnabled)
@@ -201,6 +210,33 @@ final class HomeFlowUITests: XCTestCase {
         waitForDisappearance(app.otherElements["ReminderRow"].firstMatch, timeout: 4)
     }
 
+    func test07MissingTimeFallsBackToManualSelection() {
+        launchApp()
+
+        app.buttons["HomeTypeButton"].tap()
+
+        let sentenceField = app.textFields["TextReminderSentenceField"]
+        XCTAssertTrue(sentenceField.waitForExistence(timeout: 5))
+        sentenceField.tap()
+        sentenceField.typeText("Buy milk")
+        dismissKeyboardIfNeeded()
+
+        let parseButton = app.buttons["ParseTextReminderButton"]
+        XCTAssertTrue(parseButton.isEnabled)
+        parseButton.tap()
+
+        let confirmButton = app.buttons["ConfirmCreateReminderButton"]
+        XCTAssertTrue(confirmButton.waitForExistence(timeout: 5))
+        XCTAssertFalse(confirmButton.isEnabled)
+
+        let chooseTimeButton = app.buttons["ChooseReminderTimeButton"]
+        XCTAssertTrue(chooseTimeButton.exists)
+        chooseTimeButton.tap()
+
+        XCTAssertTrue(confirmButton.isEnabled)
+        keepScreenshot(named: "12-missing-time-selection")
+    }
+
     private func keepScreenshot(named name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name
@@ -212,8 +248,14 @@ final class HomeFlowUITests: XCTestCase {
         guard app.keyboards.count > 0 else { return }
 
         let dismissButton = app.buttons["DismissReminderKeyboardButton"]
-        XCTAssertTrue(dismissButton.waitForExistence(timeout: 2))
-        dismissButton.tap()
+        if dismissButton.exists {
+            dismissButton.tap()
+            return
+        }
+
+        let textDismissButton = app.buttons["DismissTextReminderKeyboardButton"]
+        XCTAssertTrue(textDismissButton.waitForExistence(timeout: 2))
+        textDismissButton.tap()
     }
 
     private func replaceText(in element: XCUIElement, with text: String) {

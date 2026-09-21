@@ -249,13 +249,19 @@ final class HomeFlowUITests: XCTestCase {
 
         let dismissButton = app.buttons["DismissReminderKeyboardButton"]
         if dismissButton.exists {
-            dismissButton.tap()
+            tapCenter(of: dismissButton)
             return
         }
 
         let textDismissButton = app.buttons["DismissTextReminderKeyboardButton"]
         XCTAssertTrue(textDismissButton.waitForExistence(timeout: 2))
-        textDismissButton.tap()
+        tapCenter(of: textDismissButton)
+    }
+
+    private func tapCenter(of element: XCUIElement) {
+        element
+            .coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .tap()
     }
 
     private func replaceText(in element: XCUIElement, with text: String) {

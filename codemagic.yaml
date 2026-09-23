@@ -1,0 +1,40 @@
+workflows:
+  ios-testflight:
+    name: InCaseI4Get TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    integrations:
+      app_store_connect: InCaseI4Get ASC
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.incasei4get.InCaseI4Get
+      vars:
+        XCODE_PROJECT: InCaseI4Get.xcodeproj
+        XCODE_SCHEME: InCaseI4Get
+      xcode: latest
+
+    scripts:
+      - name: Set up code signing settings on Xcode project
+        script: xcode-project use-profiles
+
+      - name: Build IPA for distribution
+        script: |
+          xcode-project build-ipa \
+            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testers

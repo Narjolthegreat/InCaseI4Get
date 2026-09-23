@@ -17,6 +17,11 @@ workflows:
       xcode: latest
 
     scripts:
+      - name: Increment build number
+        script: |
+          cd "$CM_BUILD_DIR"
+          agvtool new-version -all $(($PROJECT_BUILD_NUMBER + 1))
+
       - name: Set up code signing settings on Xcode project
         script: xcode-project use-profiles
 

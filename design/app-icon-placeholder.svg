@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="background" x1="120" y1="80" x2="900" y2="944" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B1422"/>
+      <stop offset="0.55" stop-color="#12324B"/>
+      <stop offset="1" stop-color="#0D2335"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="translate(760 260) rotate(135) scale(420)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F59E0B" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#background)"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+
+  <circle cx="512" cy="512" r="404" fill="none" stroke="#7DD3FC" stroke-width="18" opacity="0.12"/>
+  <circle cx="512" cy="512" r="340" fill="none" stroke="#F8FAFC" stroke-width="6" opacity="0.08"/>
+
+  <path
+    d="M214 318C214 259.6 261.6 212 320 212H704C762.4 212 810 259.6 810 318V596C810 654.4 762.4 702 704 702H576L438 818L458 702H320C261.6 702 214 654.4 214 596V318Z"
+    fill="#F7F1E2"/>
+
+  <circle cx="512" cy="466" r="176" fill="#14263B"/>
+  <circle cx="512" cy="466" r="132" fill="none" stroke="#F59E0B" stroke-width="30"/>
+
+  <path d="M512 362V466L592 518" fill="none" stroke="#F7F1E2" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="512" cy="466" r="19" fill="#F7F1E2"/>
+
+  <circle cx="748" cy="292" r="78" fill="#F59E0B" stroke="#0F2A41" stroke-width="24"/>
+  <path d="M748 252V292L775 310" fill="none" stroke="#14263B" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

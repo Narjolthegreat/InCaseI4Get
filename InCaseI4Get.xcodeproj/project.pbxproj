@@ -26,6 +26,7 @@
 		C10018C10018C10018C10018 /* ReminderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20019C20019C20019C20019 /* ReminderStore.swift */; };
 		C10019C10019C10019C10019 /* ReminderReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20020C20020C20020C20020 /* ReminderReviewView.swift */; };
 		C10020C10020C10020C10020 /* TextReminderInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20021C20021C20021C20021 /* TextReminderInputView.swift */; };
+		C10021C10021C10021C10021 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C20022C20022C20022C20022 /* Assets.xcassets */; };
 		E10001E10001E10001E10001 /* ReminderLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20001E20001E20001E20001 /* ReminderLogicTests.swift */; };
 		E10002E10002E10002E10002 /* HomeFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20002E20002E20002E20002 /* HomeFlowUITests.swift */; };
 /* End PBXBuildFile section */
@@ -68,6 +69,7 @@
 		C20019C20019C20019C20019 /* ReminderStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderStore.swift; sourceTree = "<group>"; };
 		C20020C20020C20020C20020 /* ReminderReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderReviewView.swift; sourceTree = "<group>"; };
 		C20021C20021C20021C20021 /* TextReminderInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextReminderInputView.swift; sourceTree = "<group>"; };
+		C20022C20022C20022C20022 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C80001C80001C80001C80001 /* InCaseI4Get.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InCaseI4Get.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E20001E20001E20001E20001 /* ReminderLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderLogicTests.swift; sourceTree = "<group>"; };
 		E20002E20002E20002E20002 /* HomeFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeFlowUITests.swift; sourceTree = "<group>"; };
@@ -181,6 +183,7 @@
 			isa = PBXGroup;
 			children = (
 				C20013C20013C20013C20013 /* Info.plist */,
+				C20022C20022C20022C20022 /* Assets.xcassets */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -314,6 +317,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C10021C10021C10021C10021 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -501,6 +505,7 @@
 		C70003C70003C70003C70003 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -523,6 +528,7 @@
 		C70004C70004C70004C70004 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";

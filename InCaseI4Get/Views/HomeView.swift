@@ -43,6 +43,21 @@ struct HomeView: View {
         activeReminders.filter { !Calendar.current.isDateInToday($0.fireDate) }
     }
 
+    private var homeBackground: Color {
+        let color: UIColor = activeReminders.isEmpty
+            ? .systemBackground
+            : .systemGroupedBackground
+        return Color(uiColor: color)
+    }
+
+    private var homeActionColor: Color {
+        Color(
+            red: 0,
+            green: 122.0 / 255.0,
+            blue: 1
+        )
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -58,9 +73,16 @@ struct HomeView: View {
                     reminderList
                 }
             }
-            .navigationTitle(settings.language.text(.appTitle))
+            .background(homeBackground)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HomeHeaderTitle(
+                        title: settings.language.text(.appTitle),
+                        accentColor: homeActionColor
+                    )
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         isShowingSettings = true
@@ -245,7 +267,8 @@ struct HomeView: View {
                     .font(.body.weight(.semibold))
                     .frame(maxWidth: .infinity, minHeight: 52)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.borderedProminent)
+            .tint(homeActionColor)
             .controlSize(.large)
             .accessibilityLabel(settings.language.text(.homeVoiceA11y))
             .accessibilityIdentifier("HomeSpeakButton")
@@ -270,14 +293,15 @@ struct HomeView: View {
                     .font(.body.weight(.semibold))
                     .frame(maxWidth: .infinity, minHeight: 52)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.borderedProminent)
+            .tint(homeActionColor)
             .controlSize(.large)
             .accessibilityLabel(settings.language.text(.homeTypeA11y))
             .accessibilityIdentifier("HomeTypeButton")
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
-        .background(.bar)
+        .background(homeBackground.ignoresSafeArea(edges: .bottom))
     }
 
     private func handleLaunchTasks() async {
@@ -536,6 +560,63 @@ struct HomeView: View {
         }
     }
 
+}
+
+private struct HomeHeaderTitle: View {
+    let title: String
+    let accentColor: Color
+
+    var body: some View {
+        HStack(spacing: 8) {
+            AnimatedBellBadge(accentColor: accentColor)
+
+            Text(title)
+                .font(.system(.headline, design: .rounded, weight: .bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(.isHeader)
+    }
+}
+
+private struct AnimatedBellBadge: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    let accentColor: Color
+
+    @State private var shakeTrigger = 0
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(accentColor)
+
+            Image(systemName: "bell.badge.fill")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(.white)
+                .phaseAnimator(
+                    [0.0, -7.0, 7.0, -5.0, 4.0, 0.0],
+                    trigger: shakeTrigger
+                ) { content, angle in
+                    content.rotationEffect(.degrees(angle), anchor: .top)
+                } animation: { _ in
+                    .easeInOut(duration: 0.08)
+                }
+        }
+        .frame(width: 28, height: 28)
+        .shadow(color: accentColor.opacity(0.22), radius: 5, y: 2)
+        .task(id: reduceMotion) {
+            guard !reduceMotion else { return }
+
+            try? await Task.sleep(for: .milliseconds(450))
+            while !Task.isCancelled {
+                shakeTrigger += 1
+                try? await Task.sleep(for: .seconds(7))
+            }
+        }
+    }
 }
 
 private struct VoiceCaptureOverlay: View {

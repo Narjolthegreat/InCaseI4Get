@@ -55,7 +55,7 @@ struct TextReminderInputView: View {
                 }
             }
             .padding(20)
-            .frame(maxWidth: 420)
+            .frame(maxWidth: 340)
             .background(
                 .regularMaterial,
                 in: RoundedRectangle(cornerRadius: 8)

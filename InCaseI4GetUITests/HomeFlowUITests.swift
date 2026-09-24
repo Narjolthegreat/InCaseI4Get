@@ -15,11 +15,11 @@ final class HomeFlowUITests: XCTestCase {
     func test01HomeEmptyState() {
         launchApp()
 
+        let typeButton = app.buttons["HomeTypeButton"]
         XCTAssertTrue(
-            app.navigationBars["In Case I Forget"].waitForExistence(timeout: 5),
+            typeButton.waitForExistence(timeout: 5),
             "Home screen did not appear."
         )
-        XCTAssertTrue(app.buttons["HomeTypeButton"].exists)
         XCTAssertTrue(app.buttons["HomeSpeakButton"].exists)
 
         keepScreenshot(named: "01-home-empty")

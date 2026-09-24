@@ -259,17 +259,17 @@ struct HomeView: View {
     }
 
     private var bottomBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 18) {
             Button {
                 // Press-and-hold is handled by the gesture below.
             } label: {
                 Label(settings.language.text(.homeSpeak), systemImage: "mic.fill")
-                    .font(.body.weight(.semibold))
-                    .frame(maxWidth: .infinity, minHeight: 52)
+                    .font(.title3.weight(.semibold))
+                    .frame(maxWidth: .infinity, minHeight: 46)
             }
             .buttonStyle(.borderedProminent)
             .tint(homeActionColor)
-            .controlSize(.large)
+            .controlSize(.regular)
             .accessibilityLabel(settings.language.text(.homeVoiceA11y))
             .accessibilityIdentifier("HomeSpeakButton")
             .accessibilityHint(settings.language.text(.homeVoiceHint))
@@ -290,17 +290,17 @@ struct HomeView: View {
                 showTextEntry()
             } label: {
                 Label(settings.language.text(.homeType), systemImage: "keyboard.fill")
-                    .font(.body.weight(.semibold))
-                    .frame(maxWidth: .infinity, minHeight: 52)
+                    .font(.title3.weight(.semibold))
+                    .frame(maxWidth: .infinity, minHeight: 46)
             }
             .buttonStyle(.borderedProminent)
             .tint(homeActionColor)
-            .controlSize(.large)
+            .controlSize(.regular)
             .accessibilityLabel(settings.language.text(.homeTypeA11y))
             .accessibilityIdentifier("HomeTypeButton")
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 10)
         .background(homeBackground.ignoresSafeArea(edges: .bottom))
     }
 

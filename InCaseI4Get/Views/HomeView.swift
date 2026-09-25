@@ -238,32 +238,30 @@ struct HomeView: View {
     }
 
     private var reminderList: some View {
-        TimelineView(.periodic(from: .now, by: 60)) { context in
-            List {
-                Section(settings.language.text(.homeToday)) {
-                    if todayReminders.isEmpty {
-                        Text(settings.language.text(.homeNothingToday))
-                            .foregroundStyle(.secondary)
-                    } else {
-                        rows(for: todayReminders, now: context.date)
-                    }
-                }
-                Section(settings.language.text(.homeUpcoming)) {
-                    if upcomingReminders.isEmpty {
-                        Text(settings.language.text(.homeNothingLater))
-                            .foregroundStyle(.secondary)
-                    } else {
-                        rows(for: upcomingReminders, now: context.date)
-                    }
+        List {
+            Section(settings.language.text(.homeToday)) {
+                if todayReminders.isEmpty {
+                    Text(settings.language.text(.homeNothingToday))
+                        .foregroundStyle(.secondary)
+                } else {
+                    rows(for: todayReminders)
                 }
             }
-            .listStyle(.insetGrouped)
+            Section(settings.language.text(.homeUpcoming)) {
+                if upcomingReminders.isEmpty {
+                    Text(settings.language.text(.homeNothingLater))
+                        .foregroundStyle(.secondary)
+                } else {
+                    rows(for: upcomingReminders)
+                }
+            }
         }
+        .listStyle(.insetGrouped)
     }
 
-    private func rows(for items: [ReminderItem], now: Date) -> some View {
+    private func rows(for items: [ReminderItem]) -> some View {
         ForEach(items) { item in
-            ReminderRowView(reminder: item, now: now) {
+            ReminderRowView(reminder: item) {
                 reminderActionTarget = item
             }
         }

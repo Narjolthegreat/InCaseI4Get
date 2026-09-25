@@ -3,6 +3,7 @@ import SwiftData
 
 enum ReminderStoreError: Error {
     case notificationPermissionDenied
+    case notificationSchedulingFailed(Error)
     case emptyTitle
     case missingDate
     case persistenceFailed(Error)
@@ -32,10 +33,26 @@ enum ReminderStore {
             throw ReminderStoreError.persistenceFailed(error)
         }
 
-        let notificationWarning = await schedule(item)
+        return try await finalizePendingCreation(item, in: modelContext)
+    }
+
+    static func finalizePendingCreation(
+        _ item: ReminderItem,
+        in modelContext: ModelContext
+    ) async throws -> ReminderMutationOutcome {
+        do {
+            item.notificationState = try await schedule(item)
+            try modelContext.save()
+        } catch {
+            await NotificationScheduler.cancel(item)
+            modelContext.delete(item)
+            try? modelContext.save()
+            throw ReminderStoreError.notificationSchedulingFailed(error)
+        }
+
         return ReminderMutationOutcome(
             item: item,
-            notificationWarning: notificationWarning
+            notificationWarning: false
         )
     }
 
@@ -62,7 +79,15 @@ enum ReminderStore {
         }
 
         await NotificationScheduler.cancel(item)
-        let notificationWarning = await schedule(item)
+        let notificationWarning: Bool
+        do {
+            item.notificationState = try await schedule(item)
+            try modelContext.save()
+            notificationWarning = false
+        } catch {
+            notificationWarning = true
+        }
+
         return ReminderMutationOutcome(
             item: item,
             notificationWarning: notificationWarning
@@ -81,6 +106,7 @@ enum ReminderStore {
         }
 
         return ReminderItem(
+            id: draft.id,
             title: title,
             note: draft.note.trimmingCharacters(in: .whitespacesAndNewlines),
             fireDate: fireDate,
@@ -126,13 +152,13 @@ enum ReminderStore {
         )
     }
 
-    private static func schedule(_ item: ReminderItem) async -> Bool {
-        do {
-            try await NotificationScheduler.schedule(item)
-            return false
-        } catch {
-            return true
-        }
+    private static func schedule(
+        _ item: ReminderItem
+    ) async throws -> ReminderNotificationState {
+        let usesCustomSound = try await NotificationScheduler.schedule(item)
+        return usesCustomSound
+            ? .scheduledWithVoice
+            : .scheduledWithDefaultSound
     }
 }
 

@@ -24,8 +24,11 @@ enum NotificationScheduler {
         }
     }
 
-    static func schedule(_ item: ReminderItem) async throws {
-        guard !item.isCompleted, !item.shouldBeRemoved(at: Date()) else { return }
+    @discardableResult
+    static func schedule(_ item: ReminderItem) async throws -> Bool {
+        guard !item.isCompleted, !item.shouldBeRemoved(at: Date()) else {
+            return false
+        }
 
         let customSoundsAvailable = await ReminderVoiceStore.prepareSounds(for: item)
 
@@ -52,6 +55,8 @@ enum NotificationScheduler {
         for request in requests {
             try await center.add(request)
         }
+
+        return customSoundsAvailable
     }
 
     static func cancel(_ item: ReminderItem) async {

@@ -5,7 +5,6 @@ import UIKit
 private enum VoiceCapturePhase {
     case listening
     case processing
-    case completed(title: String, fireDate: Date)
     case updated(title: String, fireDate: Date)
     case failed(String)
 }
@@ -23,6 +22,7 @@ struct HomeView: View {
     @State private var isShowingTextEntry = false
     @State private var textInput = ""
     @State private var pendingReminderDraft: ReminderDraft?
+    @State private var creatingReminderID: UUID?
     @State private var isSavingReminder = false
     @State private var saveErrorMessage: String?
     @State private var reminderActionTarget: ReminderItem?
@@ -32,7 +32,14 @@ struct HomeView: View {
     private let reminderParser = ReminderParser()
 
     private var activeReminders: [ReminderItem] {
-        reminders.filter { !$0.isCompleted && !$0.shouldBeRemoved(at: Date()) }
+        reminders.filter { item in
+            guard !item.isCompleted else { return false }
+            guard item.notificationState != .pending else { return false }
+            if let creatingReminderID, item.id == creatingReminderID {
+                return false
+            }
+            return !item.shouldBeRemoved(at: Date())
+        }
     }
 
     private var todayReminders: [ReminderItem] {
@@ -74,6 +81,10 @@ struct HomeView: View {
                 }
             }
             .background(homeBackground)
+            .animation(
+                .snappy(duration: 0.28),
+                value: activeReminders.map { $0.id }
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
@@ -305,6 +316,7 @@ struct HomeView: View {
     }
 
     private func handleLaunchTasks() async {
+        await recoverPendingReminders()
         await handleForegroundTasks()
 
         for id in PendingActionStore.drain(kind: .open) {
@@ -322,6 +334,15 @@ struct HomeView: View {
         cleanupExpiredReminders()
         rollForwardRecurringReminders()
         await NotificationScheduler.reschedule(activeReminders)
+    }
+
+    private func recoverPendingReminders() async {
+        for item in reminders where item.notificationState == .pending {
+            _ = try? await ReminderStore.finalizePendingCreation(
+                item,
+                in: modelContext
+            )
+        }
     }
 
     private func cleanupExpiredReminders() {
@@ -494,6 +515,7 @@ struct HomeView: View {
 
     private func saveReminder(_ draft: ReminderDraft) {
         guard !isSavingReminder else { return }
+        creatingReminderID = draft.id
         isSavingReminder = true
         saveErrorMessage = nil
 
@@ -503,16 +525,15 @@ struct HomeView: View {
                     from: draft,
                     in: modelContext
                 )
-                pendingReminderDraft = nil
-                isSavingReminder = false
-                showVoiceResult(
-                    .completed(
-                        title: draft.trimmedTitle,
-                        fireDate: draft.fireDate ?? Date()
-                    ),
-                    duration: .seconds(1.6)
-                )
+                withAnimation(.snappy(duration: 0.28)) {
+                    pendingReminderDraft = nil
+                    creatingReminderID = nil
+                    isSavingReminder = false
+                }
+                UINotificationFeedbackGenerator()
+                    .notificationOccurred(.success)
             } catch {
+                creatingReminderID = nil
                 isSavingReminder = false
                 saveErrorMessage = message(for: error)
             }
@@ -539,6 +560,8 @@ struct HomeView: View {
         switch storeError {
         case .notificationPermissionDenied:
             return settings.language.text(.voiceErrorPermission)
+        case .notificationSchedulingFailed:
+            return settings.language.text(.voiceFailed)
         case .emptyTitle:
             return settings.language.text(.voiceErrorEmptyTitle)
         case .missingDate:
@@ -668,8 +691,6 @@ private struct VoiceCaptureOverlay: View {
             settings.language.text(.voiceListening)
         case .processing:
             settings.language.text(.voiceProcessing)
-        case .completed:
-            settings.language.text(.voiceCreated)
         case .updated:
             settings.language.text(.voiceUpdated)
         case .failed:
@@ -687,8 +708,6 @@ private struct VoiceCaptureOverlay: View {
             transcript.isEmpty
                 ? settings.language.text(.voiceProcessingHint)
                 : transcript
-        case .completed(let title, let fireDate):
-            "\(title) · \(fireDate.formatted(date: .abbreviated, time: .shortened))"
         case .updated(let title, let fireDate):
             "\(title) · \(fireDate.formatted(date: .abbreviated, time: .shortened))"
         case .failed(let message):

@@ -9,6 +9,25 @@ final class ReminderLogicTests: XCTestCase {
         return calendar
     }()
 
+    func testNewReminderStartsPendingNotificationState() {
+        let item = makeReminder(
+            fireDate: Date().addingTimeInterval(60 * 60),
+            repeatRule: .once
+        )
+
+        XCTAssertEqual(item.notificationState, .pending)
+    }
+
+    func testLegacyReminderDefaultsToScheduledWithVoice() {
+        let item = makeReminder(
+            fireDate: Date().addingTimeInterval(60 * 60),
+            repeatRule: .once
+        )
+        item.notificationStateRaw = nil
+
+        XCTAssertEqual(item.notificationState, .scheduledWithVoice)
+    }
+
     func testSentenceParserExtractsDailyRepeatRule() {
         let result = ReminderSentenceParser.parse("Take medicine every day at 8:00 PM")
 

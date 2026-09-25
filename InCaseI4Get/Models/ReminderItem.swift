@@ -24,6 +24,12 @@ enum ReminderSource: String, Equatable {
     case text
 }
 
+enum ReminderNotificationState: String, Equatable {
+    case pending
+    case scheduledWithVoice
+    case scheduledWithDefaultSound
+}
+
 @Model
 final class ReminderItem: Identifiable {
     @Attribute(.unique) var id: UUID
@@ -40,6 +46,7 @@ final class ReminderItem: Identifiable {
     var completedAt: Date?
     var acknowledgedAt: Date?
     var createdAt: Date
+    var notificationStateRaw: String?
 
     init(
         id: UUID = UUID(),
@@ -67,6 +74,7 @@ final class ReminderItem: Identifiable {
         self.completedAt = nil
         self.acknowledgedAt = nil
         self.createdAt = Date()
+        self.notificationStateRaw = ReminderNotificationState.pending.rawValue
     }
 
     var repeatRule: ReminderRepeat {
@@ -77,6 +85,18 @@ final class ReminderItem: Identifiable {
     var source: ReminderSource {
         get { ReminderSource(rawValue: sourceRaw) ?? .text }
         set { sourceRaw = newValue.rawValue }
+    }
+
+    var notificationState: ReminderNotificationState {
+        get {
+            notificationStateRaw.flatMap {
+                ReminderNotificationState(rawValue: $0)
+            }
+                ?? .scheduledWithVoice
+        }
+        set {
+            notificationStateRaw = newValue.rawValue
+        }
     }
 
     var displayTime: Date {

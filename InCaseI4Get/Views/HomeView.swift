@@ -83,7 +83,7 @@ struct HomeView: View {
             .background(homeBackground)
             .animation(
                 .snappy(duration: 0.28),
-                value: activeReminders.map { $0.id }
+                value: activeReminders.count
             )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

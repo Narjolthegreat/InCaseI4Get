@@ -86,7 +86,7 @@ enum NotificationScheduler {
         await cancel(item)
         item.advanceAfterAcknowledgment()
         if !item.isCompleted {
-            try? await schedule(item)
+            _ = try? await schedule(item)
         }
     }
 

@@ -32,6 +32,8 @@ enum ReminderNotificationState: String, Equatable {
 
 @Model
 final class ReminderItem: Identifiable {
+    static let expiredRetention: TimeInterval = 24 * 60 * 60
+
     @Attribute(.unique) var id: UUID
     var title: String
     var note: String
@@ -113,10 +115,13 @@ final class ReminderItem: Identifiable {
             return true
         }
         if repeatRule == .once {
-            return now >= Self.endOfLocalDay(for: fireDate, calendar: calendar)
+            return now >= fireDate.addingTimeInterval(Self.expiredRetention)
         }
         if let endDate = repeatEndDate {
-            return now > Self.endOfLocalDay(for: endDate, calendar: calendar)
+            return now >= Self.endOfLocalDay(
+                for: endDate,
+                calendar: calendar
+            ).addingTimeInterval(Self.expiredRetention)
         }
         return false
     }

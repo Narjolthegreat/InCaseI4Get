@@ -25,36 +25,53 @@ struct HomeView: View {
     @State private var creatingReminderID: UUID?
     @State private var isSavingReminder = false
     @State private var saveErrorMessage: String?
+    @State private var now = Date()
     @State private var reminderActionTarget: ReminderItem?
     @State private var reminderBeingEdited: ReminderItem?
     @StateObject private var voiceRecorder = VoiceTranscriber()
     @StateObject private var purchaseManager = PurchaseManager()
     private let reminderParser = ReminderParser()
 
-    private var activeReminders: [ReminderItem] {
+    private var visibleReminders: [ReminderItem] {
         reminders.filter { item in
             guard !item.isCompleted else { return false }
             guard item.notificationState != .pending else { return false }
             if let creatingReminderID, item.id == creatingReminderID {
                 return false
             }
-            return !item.shouldBeRemoved(at: Date())
+            return true
         }
     }
 
     private var todayReminders: [ReminderItem] {
-        activeReminders.filter { Calendar.current.isDateInToday($0.fireDate) }
+        visibleReminders.filter {
+            timePresentation(for: $0).bucket == .today
+        }
     }
 
     private var upcomingReminders: [ReminderItem] {
-        activeReminders.filter { !Calendar.current.isDateInToday($0.fireDate) }
+        visibleReminders.filter {
+            timePresentation(for: $0).bucket == .upcoming
+        }
+    }
+
+    private var expiredReminders: [ReminderItem] {
+        visibleReminders
+            .filter { timePresentation(for: $0).bucket == .expired }
+            .sorted { $0.fireDate > $1.fireDate }
     }
 
     private var homeBackground: Color {
-        let color: UIColor = activeReminders.isEmpty
+        let color: UIColor = visibleReminders.isEmpty
             ? .systemBackground
             : .systemGroupedBackground
         return Color(uiColor: color)
+    }
+
+    private func timePresentation(
+        for item: ReminderItem
+    ) -> ReminderTimePresentation {
+        item.timePresentation(at: now, language: settings.language)
     }
 
     private var homeActionColor: Color {
@@ -68,7 +85,7 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if activeReminders.isEmpty {
+                if visibleReminders.isEmpty {
                     ContentUnavailableView(
                         settings.language.text(.homeEmptyTitle),
                         systemImage: "bell.badge",
@@ -83,7 +100,7 @@ struct HomeView: View {
             .background(homeBackground)
             .animation(
                 .snappy(duration: 0.28),
-                value: activeReminders.count
+                value: visibleReminders.count
             )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -205,6 +222,17 @@ struct HomeView: View {
             }
             .task {
                 await handleLaunchTasks()
+                while !Task.isCancelled {
+                    do {
+                        try await Task.sleep(for: .seconds(60))
+                    } catch {
+                        break
+                    }
+
+                    let currentDate = Date()
+                    now = currentDate
+                    await processReminderLifecycle(at: currentDate)
+                }
             }
             .onChange(of: scenePhase) { _, newPhase in
                 if newPhase == .active {
@@ -216,10 +244,13 @@ struct HomeView: View {
             .onChange(of: settings.language) { _, _ in
                 AppDelegate.configureNotificationCategories()
                 Task { @MainActor in
-                    for item in activeReminders {
+                    let remindersToSchedule = visibleReminders.filter {
+                        timePresentation(for: $0).bucket != .expired
+                    }
+                    for item in remindersToSchedule {
                         await NotificationScheduler.cancel(item)
                     }
-                    await NotificationScheduler.reschedule(activeReminders)
+                    await NotificationScheduler.reschedule(remindersToSchedule)
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .reminderWillPresent)) { note in
@@ -255,13 +286,21 @@ struct HomeView: View {
                     rows(for: upcomingReminders)
                 }
             }
+            if !expiredReminders.isEmpty {
+                Section {
+                    rows(for: expiredReminders)
+                } header: {
+                    Text(settings.language.text(.homeExpired))
+                        .foregroundStyle(.red)
+                }
+            }
         }
         .listStyle(.insetGrouped)
     }
 
     private func rows(for items: [ReminderItem]) -> some View {
         ForEach(items) { item in
-            ReminderRowView(reminder: item) {
+            ReminderRowView(reminder: item, now: now) {
                 reminderActionTarget = item
             }
         }
@@ -329,9 +368,14 @@ struct HomeView: View {
     }
 
     private func handleForegroundTasks() async {
-        cleanupExpiredReminders()
-        rollForwardRecurringReminders()
-        await NotificationScheduler.reschedule(activeReminders)
+        let currentDate = Date()
+        now = currentDate
+        await processReminderLifecycle(at: currentDate)
+
+        let remindersToSchedule = visibleReminders.filter {
+            timePresentation(for: $0).bucket != .expired
+        }
+        await NotificationScheduler.reschedule(remindersToSchedule)
     }
 
     private func recoverPendingReminders() async {
@@ -343,27 +387,58 @@ struct HomeView: View {
         }
     }
 
-    private func cleanupExpiredReminders() {
-        for item in reminders where item.shouldBeRemoved(at: Date()) {
-            modelContext.delete(item)
-        }
-        try? modelContext.save()
-    }
-
-    private func rollForwardRecurringReminders() {
+    private func processReminderLifecycle(at currentDate: Date) async {
+        let retention = ReminderItem.expiredRetention
         let calendar = Calendar.current
-        let now = Date()
-        for item in reminders where !item.isCompleted && item.repeatRule != .once {
-            if let endDate = item.repeatEndDate,
-               now > ReminderItem.endOfLocalDay(for: endDate, calendar: calendar) {
-                modelContext.delete(item)
+        var needsSave = false
+
+        for item in reminders where !item.isCompleted {
+            guard currentDate.timeIntervalSince(item.fireDate) >= retention else {
                 continue
             }
-            if item.fireDate < now {
-                item.fireDate = item.nextOccurrence(after: now, calendar: calendar) ?? item.fireDate
+
+            if item.repeatRule == .once {
+                await NotificationScheduler.cancel(item)
+                modelContext.delete(item)
+                needsSave = true
+                continue
             }
+
+            let nextDate = item.nextOccurrence(
+                after: currentDate,
+                calendar: calendar
+            )
+            let isWithinRepeatEnd: Bool
+            if let nextDate, let repeatEndDate = item.repeatEndDate {
+                isWithinRepeatEnd =
+                    repeatEndDate >= calendar.startOfDay(for: currentDate)
+                    && nextDate <= ReminderItem.endOfLocalDay(
+                        for: repeatEndDate,
+                        calendar: calendar
+                    )
+            } else {
+                isWithinRepeatEnd = nextDate != nil
+            }
+
+            guard let nextDate, isWithinRepeatEnd else {
+                await NotificationScheduler.cancel(item)
+                modelContext.delete(item)
+                needsSave = true
+                continue
+            }
+
+            await NotificationScheduler.cancel(item)
+            item.fireDate = nextDate
+            item.isCompleted = false
+            item.completedAt = nil
+            item.acknowledgedAt = nil
+            _ = try? await NotificationScheduler.schedule(item)
+            needsSave = true
         }
-        try? modelContext.save()
+
+        if needsSave {
+            try? modelContext.save()
+        }
     }
 
     private func presentReminder(id: UUID) {

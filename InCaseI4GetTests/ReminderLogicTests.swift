@@ -132,12 +132,112 @@ final class ReminderLogicTests: XCTestCase {
         XCTAssertEqual(next, makeDate(year: 2026, month: 2, day: 28, hour: 9, minute: 0))
     }
 
-    func testOneTimeReminderExpiresAfterLocalDay() {
+    func testOneTimeReminderIsRetainedFor24Hours() {
         let fireDate = makeDate(year: 2026, month: 1, day: 1, hour: 10, minute: 0)
-        let nextDay = makeDate(year: 2026, month: 1, day: 2, hour: 0, minute: 0)
         let item = makeReminder(fireDate: fireDate, repeatRule: .once)
 
-        XCTAssertTrue(item.shouldBeRemoved(at: nextDay, calendar: calendar))
+        XCTAssertFalse(
+            item.shouldBeRemoved(
+                at: fireDate.addingTimeInterval(23 * 60 * 60 + 59 * 60),
+                calendar: calendar
+            )
+        )
+        XCTAssertTrue(
+            item.shouldBeRemoved(
+                at: fireDate.addingTimeInterval(24 * 60 * 60),
+                calendar: calendar
+            )
+        )
+    }
+
+    func testChineseTimePresentationUsesRelativeDayAndPeriod() {
+        let now = makeDate(year: 2026, month: 9, day: 26, hour: 13, minute: 0)
+        let tomorrow = makeDate(year: 2026, month: 9, day: 27, hour: 15, minute: 0)
+        let item = makeReminder(fireDate: tomorrow, repeatRule: .once)
+
+        let presentation = item.timePresentation(
+            at: now,
+            language: .chinese,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(presentation.primaryText, "明天下午3:00")
+        XCTAssertNil(presentation.secondaryText)
+        XCTAssertEqual(presentation.bucket, .upcoming)
+        XCTAssertEqual(presentation.urgency, .normal)
+    }
+
+    func testChineseTimePresentationUsesCountdownWithinOneHour() {
+        let target = makeDate(year: 2026, month: 9, day: 27, hour: 15, minute: 0)
+        let item = makeReminder(fireDate: target, repeatRule: .once)
+
+        let before = makeDate(year: 2026, month: 9, day: 27, hour: 14, minute: 12)
+        let beforePresentation = item.timePresentation(
+            at: before,
+            language: .chinese,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(beforePresentation.primaryText, "48分钟后")
+        XCTAssertEqual(beforePresentation.secondaryText, "3:00")
+        XCTAssertEqual(beforePresentation.bucket, .today)
+        XCTAssertEqual(beforePresentation.urgency, .approaching)
+
+        let close = makeDate(year: 2026, month: 9, day: 27, hour: 14, minute: 47)
+        XCTAssertEqual(
+            item.timePresentation(
+                at: close,
+                language: .chinese,
+                calendar: calendar
+            ).primaryText,
+            "13分钟后"
+        )
+    }
+
+    func testChineseTimePresentationUsesDueAndOverdueStates() {
+        let target = makeDate(year: 2026, month: 9, day: 27, hour: 15, minute: 0)
+        let item = makeReminder(fireDate: target, repeatRule: .once)
+
+        let duePresentation = item.timePresentation(
+            at: target,
+            language: .chinese,
+            calendar: calendar
+        )
+        XCTAssertEqual(duePresentation.primaryText, "现在到期")
+        XCTAssertEqual(duePresentation.bucket, .today)
+        XCTAssertEqual(duePresentation.urgency, .urgent)
+
+        let oneMinuteLate = target.addingTimeInterval(60)
+        let oneMinutePresentation = item.timePresentation(
+            at: oneMinuteLate,
+            language: .chinese,
+            calendar: calendar
+        )
+        XCTAssertEqual(oneMinutePresentation.primaryText, "已过期1分钟")
+        XCTAssertEqual(oneMinutePresentation.bucket, .expired)
+
+        let overduePresentation = item.timePresentation(
+            at: target.addingTimeInterval(80 * 60),
+            language: .chinese,
+            calendar: calendar
+        )
+        XCTAssertEqual(overduePresentation.primaryText, "已过期1小时20分钟")
+    }
+
+    func testRepeatingReminderShowsNextOccurrenceAfterExpiry() {
+        let target = makeDate(year: 2026, month: 9, day: 27, hour: 15, minute: 0)
+        let item = makeReminder(fireDate: target, repeatRule: .daily)
+        let now = target.addingTimeInterval(30 * 60)
+
+        let presentation = item.timePresentation(
+            at: now,
+            language: .chinese,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(presentation.primaryText, "已过期30分钟")
+        XCTAssertEqual(presentation.secondaryText, "下一次：明天下午3:00")
+        XCTAssertEqual(presentation.bucket, .expired)
     }
 
     func testAllLanguagesHaveCompleteLocalization() {
